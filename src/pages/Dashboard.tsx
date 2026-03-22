@@ -8,6 +8,8 @@ import {
 import { CurrentVitalsCard } from "../components/CurrentVitalsCard";
 import { PredictionCard } from "../components/PredictionCard";
 import type { PredictionDoc } from "../lib/firebaseData";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../lib/firebaseCore";
 
 const Dashboard = () => {
   const [sensor, setSensor] = useState<any | null>(null);
@@ -15,6 +17,15 @@ const Dashboard = () => {
   const [prediction, setPrediction] = useState<PredictionDoc | null>(null);
 
   useEffect(() => {
+    (async () => {
+      const preds = await getDocs(collection(db, "predictions"));
+      console.log("[DEBUG] predictions docs size:", preds.size);
+      preds.forEach(d => console.log("[DEBUG] pred doc", d.id, d.data()));
+
+      const logs = await getDocs(collection(db, "sensor_logs_10s"));
+      console.log("[DEBUG] sensor_logs_10s docs size:", logs.size);
+      logs.forEach(d => console.log("[DEBUG] log doc", d.id, d.data()));
+    })();
     // one-off debug to see what's in the predictions collection
     debugListPredictions();
 

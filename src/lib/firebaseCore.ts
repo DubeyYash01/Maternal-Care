@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getApp } from "firebase/app";
 
 // TODO: replace this with your actual config from Firebase console
 const firebaseConfig = {
@@ -13,4 +14,5 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+console.log("[DEBUG] app options", getApp().options);
 export const db = getFirestore(app);
