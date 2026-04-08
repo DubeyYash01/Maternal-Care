@@ -10,6 +10,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import Questionnaire from "./pages/Questionnaire";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard"; // <-- add this
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,10 @@ const App = () => (
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
           <Route path="/questionnaire" element={<Questionnaire />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* New route for your ML/Firebase pipeline demo */}
+          <Route path="/pipeline" element={<Dashboard />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
