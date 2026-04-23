@@ -1,0 +1,225 @@
+Completely redesign this current website from scratch.
+
+The current version is ugly, congested, confusing, low-quality, poor spacing, weak animations, and does not look premium.
+
+Delete bad layout patterns and rebuild everything with modern UI/UX.
+
+==================================================
+MAIN GOAL
+==================================================
+
+Create a world-class futuristic healthcare website for:
+
+Maternal Care – Smart Pregnancy Monitoring Belt
+
+It must look like a funded startup product, not a student dashboard.
+
+==================================================
+STRICT DESIGN RULES
+==================================================
+
+Use:
+- Clean white background
+- Soft pink + sky blue + lavender accents
+- Large spacing
+- Premium typography
+- Rounded 2xl cards
+- Soft shadows
+- Elegant minimalism
+- Glassmorphism in selected areas
+- Smooth transitions
+
+Inspired by:
+Apple + Tesla + Stripe + Modern Health Tech Startup
+
+NO clutter.
+NO cramped cards.
+NO random colors.
+NO cheap gradients.
+NO tiny text.
+
+==================================================
+LAYOUT RULES
+==================================================
+
+Use spacious modern layout.
+
+Desktop:
+- Max width centered container
+- Large padding
+- Clean sections
+- 2 or 3 column balanced grids
+
+Mobile:
+- Perfect responsive stacking
+- No overflow
+- Comfortable spacing
+
+==================================================
+SECTIONS
+==================================================
+
+1. HERO SECTION
+Huge impactful hero.
+
+Include:
+- 3D smart belt mockup illustration
+- Tagline:
+Real-Time Maternal & Fetal Monitoring
+- CTA buttons
+- Floating particles
+- Animated heartbeat pulse
+
+2. TRUST SECTION
+Show:
+IoT Powered
+Firebase Live
+Smart Sensors
+Realtime Alerts
+
+3. ABOUT SECTION
+Clean storytelling section.
+
+4. FEATURES GRID
+Premium icon cards.
+
+5. LIVE DASHBOARD SECTION (MOST IMPORTANT)
+
+6. FUTURE AI SECTION
+
+7. TEAM SECTION
+
+8. FOOTER
+
+==================================================
+LIVE DASHBOARD REDESIGN
+==================================================
+
+Create premium dashboard, NOT ugly admin panel.
+
+Use card spacing with breathing room.
+
+Top row:
+- Heart Rate
+- SpO2
+- Temperature
+- Respiration
+
+Second row:
+- ECG Live Chart (wide)
+- Pressure Movement Card
+- Sensor Status Card
+
+Third row:
+- Trend Graph
+- Alerts Panel
+
+==================================================
+REALTIME DATA
+==================================================
+
+Keep Firebase realtime integration.
+
+Use onValue listeners.
+
+When Firebase changes:
+Website updates instantly.
+
+Use these values:
+
+maxHrBpm
+maxSpO2
+tempC
+respBpm
+fsrAU
+micLevel
+ecgMappedmV
+onLine
+
+==================================================
+VISUALIZATIONS (IMPORTANT)
+==================================================
+
+Add BEAUTIFUL charts:
+
+1. ECG moving waveform chart
+2. Heart Rate live line chart
+3. Temperature smooth line chart
+4. SpO2 radial gauge
+5. Pressure animated bar
+6. Mic level animated sound bars
+
+Charts should animate live.
+
+Use Recharts.
+
+==================================================
+ANIMATIONS
+==================================================
+
+Use Framer Motion elegantly:
+
+- Fade in on scroll
+- Slide up cards
+- Hover lift
+- Pulse icons
+- Floating hero product
+- Smooth transitions
+- Count up numbers
+- Shimmer loading states
+
+No childish animations.
+
+==================================================
+UI QUALITY CONTROL
+==================================================
+
+Need:
+- Premium spacing
+- Proper margins
+- Clean alignment
+- Large readable text
+- Modern icons
+- Beautiful shadows
+- Smooth hover states
+
+==================================================
+ADD SMART STATUS COLORS
+==================================================
+
+Green = Healthy
+Yellow = Warning
+Red = Critical
+
+==================================================
+REMOVE CURRENT PROBLEMS
+==================================================
+
+Remove:
+- congested cards
+- ugly fonts
+- poor colors
+- weak charts
+- confusing layout
+- generic dashboard look
+
+==================================================
+EXTRA PREMIUM TOUCHES
+==================================================
+
+- Dark mode toggle
+- Sticky navbar
+- Smooth scroll
+- Loading splash screen
+- Back to top button
+- Animated gradient glow
+
+==================================================
+FINAL STANDARD
+==================================================
+
+When someone sees it, reaction should be:
+
+"This looks like a real healthcare startup product."
+
+Rebuild complete code now with excellent UI and functioning realtime Firebase dashboard.

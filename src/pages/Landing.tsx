@@ -1,26 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Activity,
-  AlertTriangle,
+  ArrowRight,
   ArrowUp,
   Baby,
   Bell,
+  Brain,
   CheckCircle2,
+  ChevronRight,
   Cloud,
   Cpu,
   Database,
-  Globe2,
+  Droplets,
+  Github,
   Heart,
-  LineChart,
+  HeartPulse,
+  Hospital,
+  Linkedin,
+  Mail,
   Mic,
+  Radio,
   ShieldCheck,
+  Signal,
   Sparkles,
   Stethoscope,
   Thermometer,
-  Users,
+  Twitter,
   Wifi,
   Wind,
+  Zap,
 } from "lucide-react";
 import {
   Area,
@@ -33,7 +43,6 @@ import {
   PolarAngleAxis,
   RadialBar,
   RadialBarChart,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
@@ -41,139 +50,320 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Navigation } from "@/components/Navigation";
 import { useRealtimeSensors } from "@/hooks/useRealtimeSensors";
 
+// =============================================================
+// Constants
+// =============================================================
+
+const SPLASH_DURATION_MS = 1500;
+
 const heroMessages = [
-  "AI-powered pregnancy monitoring.",
-  "Real-time maternal safety cloud.",
-  "Luxury-grade fetal insights.",
+  "Real-Time Maternal & Fetal Monitoring.",
+  "Clinical-grade signals. Anywhere, anytime.",
+  "Peace of mind, woven into a smart belt.",
 ];
 
-const stats = [
-  { label: "Continuous Sensors", value: 7 },
-  { label: "Real-time Streams", value: 12 },
-  { label: "Countries Piloting", value: 8 },
-  { label: "Signal Accuracy", value: 99.2, suffix: "%" },
+const trustItems = [
+  { icon: Cpu, label: "IoT Powered" },
+  { icon: Cloud, label: "Firebase Live" },
+  { icon: Radio, label: "Smart Sensors" },
+  { icon: Bell, label: "Realtime Alerts" },
 ];
 
 const features = [
-  { icon: Activity, title: "Real-time Monitoring", text: "Instant vitals sync with millisecond updates." },
-  { icon: Heart, title: "ECG + Heart Rate", text: "Clinical-grade ECG and bpm precision." },
-  { icon: Thermometer, title: "Temperature", text: "Detect fever spikes early with smart alerts." },
-  { icon: Wind, title: "Respiration", text: "Track respiratory rhythm and stress levels." },
-  { icon: Bell, title: "Emergency Alerts", text: "Auto-escalation to doctors and caretakers." },
-  { icon: Mic, title: "Sound & Movement", text: "Fetal activity mapped through micro acoustics." },
-  { icon: ShieldCheck, title: "Secure Cloud", text: "HIPAA-ready Firebase data pipeline." },
-  { icon: Wifi, title: "Always Connected", text: "Live status + offline detection safeguard." },
+  { icon: HeartPulse, title: "Continuous Heart Rate", text: "Beat-to-beat precision via the MAX30105 optical sensor." },
+  { icon: Droplets, title: "SpO₂ Saturation", text: "Track oxygen levels with a soft radial gauge." },
+  { icon: Thermometer, title: "Body Temperature", text: "Detect early fever shifts with TMP117 accuracy." },
+  { icon: Wind, title: "Respiration Rhythm", text: "Listen to breath patterns with INMP441 acoustics." },
+  { icon: Activity, title: "ECG Waveform", text: "Clinical-grade ECG streamed live from AD8232." },
+  { icon: Signal, title: "Pressure & Movement", text: "Sense fetal kicks and posture via FSR sensors." },
+  { icon: Bell, title: "Smart Alerts", text: "Auto-escalate anomalies to doctors and family." },
+  { icon: ShieldCheck, title: "HIPAA-ready Cloud", text: "Encrypted Firebase pipeline with audit trails." },
 ];
 
-const futureScope = [
+const aiScope = [
   {
+    icon: Brain,
     title: "AI Risk Prediction",
-    text: "Predict complications weeks ahead using multimodal models and anomaly detection.",
+    text: "Multimodal models forecast complications weeks ahead through anomaly detection.",
   },
   {
-    title: "Doctor Companion App",
-    text: "Mobile alerts, notes, and instant telemedicine access with secure auth.",
+    icon: Stethoscope,
+    title: "Doctor Companion",
+    text: "Mobile companion app for instant alerts, notes, and secure telemedicine.",
   },
   {
-    title: "Hospital Monitoring",
-    text: "Multi-patient command center for maternity wards and emergency response.",
+    icon: Hospital,
+    title: "Hospital Command Center",
+    text: "Multi-patient maternity monitoring for wards and emergency teams.",
   },
 ];
 
 const team = [
-  {
-    name: "Clinical Research",
-    role: "Maternal-Fetal Specialists",
-  },
-  {
-    name: "Hardware Engineering",
-    role: "Sensor & Embedded Systems",
-  },
-  {
-    name: "AI & Data",
-    role: "Predictive Care Intelligence",
-  },
+  { name: "Clinical Research", role: "Maternal-Fetal Specialists", initial: "C" },
+  { name: "Hardware Engineering", role: "Sensor & Embedded Systems", initial: "H" },
+  { name: "AI & Data", role: "Predictive Care Intelligence", initial: "A" },
+  { name: "Product & Design", role: "Premium Care Experience", initial: "P" },
 ];
 
-const chartConfig = {
-  heartRate: { label: "Heart Rate", color: "hsl(var(--primary))" },
-  temperature: { label: "Temperature", color: "hsl(var(--secondary))" },
-  spo2: { label: "SpO2", color: "hsl(var(--accent-warm))" },
+const stats = [
+  { label: "Continuous Sensors", value: 7 },
+  { label: "Realtime Streams", value: 12 },
+  { label: "Pilot Countries", value: 8 },
+  { label: "Signal Accuracy", value: 99.2, suffix: "%" },
+];
+
+const chartConfig: ChartConfig = {
+  heartRate: { label: "Heart Rate", color: "hsl(var(--accent-warm))" },
   ecg: { label: "ECG", color: "hsl(var(--secondary))" },
-  pressure: { label: "Pressure", color: "hsl(var(--primary))" },
-  mic: { label: "Mic Level", color: "hsl(var(--accent-warm))" },
+  spo2: { label: "SpO2", color: "hsl(var(--primary))" },
+  temperature: { label: "Temperature", color: "hsl(var(--accent-warm))" },
+  pressure: { label: "Pressure", color: "hsl(var(--success))" },
+  respiration: { label: "Respiration", color: "hsl(var(--secondary))" },
 };
 
-const SPLASH_SCREEN_DURATION_MILLISECONDS = 1300;
-const MIC_BAR_COUNT = 8;
-const MIC_BAR_BASE_HEIGHT = 20;
-const MIC_BAR_MIN_INTENSITY = 0.15;
-const MIC_BAR_SCALE = 60;
-const MIC_BAR_INDEX_OFFSET = 2;
-const MIC_BAR_INDEX_DIVISOR = 10;
+// =============================================================
+// Helpers
+// =============================================================
 
-// Default demo thresholds; adjust for clinical guidelines or deployment needs.
-const ALERT_THRESHOLDS = {
-  spo2Low: 95,
-  feverTempC: 37.5,
-  heartRateHigh: 120,
-  heartRateLow: 55,
-  sensorOfflineValue: 0,
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
+
+type Status = "healthy" | "warning" | "critical" | "idle";
+
+const statusStyle: Record<Status, { dot: string; chip: string; label: string }> = {
+  healthy: {
+    dot: "bg-emerald-500",
+    chip: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    label: "Healthy",
+  },
+  warning: {
+    dot: "bg-amber-500",
+    chip: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    label: "Warning",
+  },
+  critical: {
+    dot: "bg-rose-500",
+    chip: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+    label: "Critical",
+  },
+  idle: {
+    dot: "bg-slate-400",
+    chip: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+    label: "Awaiting",
+  },
 };
 
-const clampValue = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
-// Scales mic visualizer bars based on intensity and index weighting.
-const calculateMicBarHeight = (index: number, intensity: number) => {
-  const clampedIntensity = Math.max(MIC_BAR_MIN_INTENSITY, intensity);
-  const barScale = (index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR;
-  return MIC_BAR_BASE_HEIGHT + clampedIntensity * MIC_BAR_SCALE * barScale;
+const heartRateStatus = (v: number | null): Status => {
+  if (v === null || v === 0) return "idle";
+  if (v < 55 || v > 110) return "critical";
+  if (v < 60 || v > 100) return "warning";
+  return "healthy";
 };
+const spo2Status = (v: number | null): Status => {
+  if (v === null || v === 0) return "idle";
+  if (v < 90) return "critical";
+  if (v < 95) return "warning";
+  return "healthy";
+};
+const tempStatus = (v: number | null): Status => {
+  if (v === null || v === 0) return "idle";
+  if (v >= 38.5) return "critical";
+  if (v >= 37.5 || v < 35.5) return "warning";
+  return "healthy";
+};
+const respStatus = (v: number | null): Status => {
+  if (v === null || v === 0) return "idle";
+  if (v < 10 || v > 25) return "critical";
+  if (v < 12 || v > 20) return "warning";
+  return "healthy";
+};
+
+// =============================================================
+// Subcomponents
+// =============================================================
+
+const CountUp = ({ to, suffix = "", decimals = 0 }: { to: number; suffix?: string; decimals?: number }) => {
+  const mv = useMotionValue(0);
+  const rounded = useTransform(mv, (v) => v.toFixed(decimals));
+  const [display, setDisplay] = useState("0");
+
+  useEffect(() => {
+    const controls = animate(mv, to, { duration: 1.4, ease: "easeOut" });
+    const unsub = rounded.on("change", (v) => setDisplay(v));
+    return () => {
+      controls.stop();
+      unsub();
+    };
+  }, [to, mv, rounded]);
+
+  return (
+    <span>
+      {display}
+      {suffix}
+    </span>
+  );
+};
+
+const Particles = () => {
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 18 }).map((_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: 4 + Math.random() * 8,
+        delay: Math.random() * 4,
+        duration: 8 + Math.random() * 8,
+      })),
+    [],
+  );
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 blur-[2px]"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+          animate={{ y: [0, -40, 0], opacity: [0.2, 0.7, 0.2] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+};
+
+const StatusChip = ({ status }: { status: Status }) => {
+  const s = statusStyle[status];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${s.chip}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot} ${status !== "idle" ? "animate-pulse" : ""}`} />
+      {s.label}
+    </span>
+  );
+};
+
+const SmartBelt = () => (
+  <div className="relative mx-auto aspect-square w-full max-w-[460px]">
+    {/* halo */}
+    <motion.div
+      className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 via-accent/30 to-secondary/30 blur-3xl"
+      animate={{ scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] }}
+      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+    />
+
+    {/* expanding rings */}
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        className="absolute inset-0 rounded-full border border-primary/30"
+        animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
+        transition={{ duration: 3, repeat: Infinity, delay: i * 1, ease: "easeOut" }}
+      />
+    ))}
+
+    {/* belt body */}
+    <motion.div
+      className="absolute inset-8 rounded-[44%] bg-gradient-to-br from-white via-white to-rose-50 shadow-[0_30px_80px_-20px_rgba(184,162,244,0.55)] border border-white/80 backdrop-blur-xl"
+      animate={{ y: [0, -10, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+    >
+      {/* belt strap */}
+      <div className="absolute inset-x-4 top-1/2 h-12 -translate-y-1/2 rounded-full bg-gradient-to-r from-primary/80 via-white to-secondary/80 shadow-glow" />
+
+      {/* central sensor */}
+      <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 border border-white shadow-2xl flex items-center justify-center">
+        <motion.div
+          className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-glow"
+          animate={{ scale: [1, 1.08, 1] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Heart className="h-8 w-8 text-white" />
+        </motion.div>
+      </div>
+
+      {/* floating chips */}
+      <motion.div
+        className="absolute -left-2 top-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-soft border border-white"
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Cloud className="h-3.5 w-3.5 text-primary" />
+        Live Sync
+      </motion.div>
+      <motion.div
+        className="absolute -right-3 bottom-12 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-soft border border-white"
+        animate={{ y: [0, 6, 0] }}
+        transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Sparkles className="h-3.5 w-3.5 text-secondary" />
+        Smart AI
+      </motion.div>
+      <motion.div
+        className="absolute right-4 top-6 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-soft border border-white"
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+        Secure
+      </motion.div>
+    </motion.div>
+  </div>
+);
+
+// =============================================================
+// Main
+// =============================================================
 
 const Landing = () => {
   const { sensorData, history, lastUpdated, ecgValue } = useRealtimeSensors();
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [typedText, setTypedText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [typed, setTyped] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [showTop, setShowTop] = useState(false);
 
+  // splash
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), SPLASH_SCREEN_DURATION_MILLISECONDS);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsLoading(false), SPLASH_DURATION_MS);
+    return () => clearTimeout(t);
   }, []);
 
+  // typewriter
   useEffect(() => {
     const current = heroMessages[messageIndex];
-    const nextText = isDeleting
-      ? current.slice(0, typedText.length - 1)
-      : current.slice(0, typedText.length + 1);
-    const speed = isDeleting ? 40 : 80;
-
-    const timeout = setTimeout(() => {
-      setTypedText(nextText);
-      if (!isDeleting && nextText === current) {
-        setIsDeleting(true);
-      } else if (isDeleting && nextText.length === 0) {
-        setIsDeleting(false);
-        setMessageIndex((prev) => (prev + 1) % heroMessages.length);
+    const next = deleting ? current.slice(0, typed.length - 1) : current.slice(0, typed.length + 1);
+    const speed = deleting ? 35 : 60;
+    const t = setTimeout(() => {
+      setTyped(next);
+      if (!deleting && next === current) setTimeout(() => setDeleting(true), 1400);
+      else if (deleting && next.length === 0) {
+        setDeleting(false);
+        setMessageIndex((i) => (i + 1) % heroMessages.length);
       }
     }, speed);
+    return () => clearTimeout(t);
+  }, [typed, deleting, messageIndex]);
 
-    return () => clearTimeout(timeout);
-  }, [typedText, isDeleting, messageIndex]);
-
+  // back to top
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 600);
-    onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // derived metrics
   const heartRate = sensorData.maxHrBpm ?? 0;
   const spo2 = sensorData.maxSpO2 ?? 0;
   const temperature = sensorData.tempC ?? 0;
@@ -183,50 +373,18 @@ const Landing = () => {
   const onlineStatus = sensorData.onLine ?? 0;
   const ecgReading = ecgValue ?? 0;
 
-  const alerts = useMemo(() => {
-    const items: { title: string; description: string }[] = [];
-    if (sensorData.maxSpO2 !== null && sensorData.maxSpO2 < ALERT_THRESHOLDS.spo2Low) {
-      items.push({
-        title: "Low Oxygen Alert",
-        description: `SpO2 below ${ALERT_THRESHOLDS.spo2Low}% threshold.`,
-      });
-    }
-    if (sensorData.tempC !== null && sensorData.tempC > ALERT_THRESHOLDS.feverTempC) {
-      items.push({
-        title: "Fever Alert",
-        description: `Temperature above ${ALERT_THRESHOLDS.feverTempC.toFixed(1)}°C.`,
-      });
-    }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm > ALERT_THRESHOLDS.heartRateHigh) {
-      items.push({
-        title: "High Heart Rate",
-        description: `Maternal heart rate above ${ALERT_THRESHOLDS.heartRateHigh} BPM.`,
-      });
-    }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm < ALERT_THRESHOLDS.heartRateLow) {
-      items.push({
-        title: "Low Heart Rate",
-        description: `Maternal heart rate below ${ALERT_THRESHOLDS.heartRateLow} BPM.`,
-      });
-    }
-    if (sensorData.onLine !== null && Number(sensorData.onLine) === ALERT_THRESHOLDS.sensorOfflineValue) {
-      items.push({ title: "Sensor Offline", description: "No signal detected from the belt." });
-    }
-    return items;
-  }, [sensorData.maxHrBpm, sensorData.maxSpO2, sensorData.tempC, sensorData.onLine]);
+  const hrStatus = heartRateStatus(sensorData.maxHrBpm);
+  const oxStatus = spo2Status(sensorData.maxSpO2);
+  const tStatus = tempStatus(sensorData.tempC);
+  const rStatus = respStatus(sensorData.respBpm);
 
-  const lastUpdatedLabel = lastUpdated
-    ? lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-    : "Awaiting data";
+  const tempLevel = clamp((temperature - 34) / 6, 0, 1);
+  const pressureLevel = clamp(pressure / 100, 0, 1);
+  const micIntensity = clamp(micLevel / 100, 0, 1);
 
-  const tempLevel = clampValue((temperature - 34) / 6, 0, 1);
-  const micIntensity = clampValue(micLevel / 100, 0, 1);
-  const pressureLevel = clampValue(pressure / 100, 0, 1);
-  const respLevel = clampValue(respiration / 40, 0, 1);
+  const spo2Data = [{ name: "SpO2", value: spo2 || 0, fill: "hsl(var(--primary))" }];
 
-  const spo2Data = [{ name: "SpO2", value: spo2, fill: "var(--color-spo2)" }];
-
-  const multiMetricHistory = useMemo(
+  const trendData = useMemo(
     () =>
       history.heartRate.map((entry, index) => ({
         time: entry.time,
@@ -237,21 +395,59 @@ const Landing = () => {
     [history.heartRate, history.temperature, history.spo2],
   );
 
+  const alerts = useMemo(() => {
+    const items: { title: string; description: string; status: Status }[] = [];
+    if (oxStatus === "critical")
+      items.push({ title: "Low Oxygen", description: `SpO₂ at ${spo2}% — below 90% threshold.`, status: "critical" });
+    else if (oxStatus === "warning")
+      items.push({ title: "Oxygen Watch", description: `SpO₂ at ${spo2}% — monitor closely.`, status: "warning" });
+
+    if (tStatus === "critical")
+      items.push({ title: "High Fever", description: `Temperature ${temperature.toFixed(1)}°C.`, status: "critical" });
+    else if (tStatus === "warning")
+      items.push({ title: "Temperature Watch", description: `Temperature ${temperature.toFixed(1)}°C.`, status: "warning" });
+
+    if (hrStatus === "critical")
+      items.push({ title: "Heart Rate Critical", description: `${heartRate} BPM — outside safe range.`, status: "critical" });
+    else if (hrStatus === "warning")
+      items.push({ title: "Heart Rate Watch", description: `${heartRate} BPM — borderline.`, status: "warning" });
+
+    if (Number(onlineStatus) === 0 && lastUpdated)
+      items.push({ title: "Sensor Offline", description: "Belt is currently offline.", status: "warning" });
+
+    if (items.length === 0)
+      items.push({ title: "All Systems Healthy", description: "Vitals within normal range.", status: "healthy" });
+
+    return items;
+  }, [hrStatus, oxStatus, tStatus, heartRate, spo2, temperature, onlineStatus, lastUpdated]);
+
+  const lastUpdatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : "Awaiting data";
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Splash */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-white dark:bg-slate-950"
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-white"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="text-center space-y-4">
-              <div className="mx-auto h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow animate-pulse">
-                <Heart className="h-8 w-8 text-white" />
+            <div className="flex flex-col items-center gap-5">
+              <motion.div
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-primary shadow-glow"
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Heart className="h-9 w-9 text-white" />
+              </motion.div>
+              <div className="text-center">
+                <p className="text-xs font-medium uppercase tracking-[0.4em] text-muted-foreground">Maternal Care</p>
+                <p className="mt-2 text-lg font-semibold text-gradient">Initializing Live Systems…</p>
               </div>
-              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Maternal Care</p>
-              <p className="text-lg font-semibold text-gradient">Initializing Live Systems...</p>
             </div>
           </motion.div>
         )}
@@ -259,215 +455,249 @@ const Landing = () => {
 
       <Navigation />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden pt-24 pb-20">
-        <div className="absolute inset-0 bg-grid-soft opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-secondary/10" />
+      {/* ===================== HERO ===================== */}
+      <section className="relative overflow-hidden">
+        {/* Background gradients */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-sky-50" />
+          <div className="absolute -top-40 left-1/2 h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-secondary/20 blur-3xl" />
+          <div className="absolute inset-0 bg-grid-soft opacity-40" />
+        </div>
+        <Particles />
 
-        <div className="relative container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <div className="flex items-center gap-3 mb-6">
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
-                </span>
-                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                  Live Cloud Connected
-                </Badge>
-              </div>
+        <div className="container relative mx-auto px-6 pt-20 pb-28 lg:pt-28 lg:pb-36">
+          <div className="grid items-center gap-16 lg:grid-cols-[1.05fr_0.95fr]">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              <Badge className="border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15">
+                <Sparkles className="mr-1.5 h-3 w-3" /> Premium Maternal Tech
+              </Badge>
 
-              <h1 className="text-4xl lg:text-6xl font-semibold leading-tight text-balance">
-                Maternal Care
-                <span className="block text-gradient">Smart Pregnancy Monitoring Belt</span>
+              <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+                Real-Time Maternal &amp;{" "}
+                <span className="text-gradient">Fetal Monitoring</span> woven into a smart belt.
               </h1>
 
-              <p className="mt-4 text-lg text-muted-foreground max-w-xl text-balance">
-                {typedText}
-                <span className="ml-1 inline-block h-5 w-[2px] bg-primary align-middle animate-pulse" />
+              <p className="max-w-xl text-balance text-lg text-muted-foreground sm:text-xl">
+                A clinical-grade wearable that streams seven vital signals to families and care teams in milliseconds.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button className="btn-hero" asChild>
-                  <a href="#dashboard">View Live Dashboard</a>
+              <div className="flex h-7 items-center text-sm font-medium text-primary">
+                <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+                <span>{typed}</span>
+                <span className="ml-1 inline-block h-4 w-[2px] animate-pulse bg-primary" />
+              </div>
+
+              <div className="flex flex-wrap gap-4 pt-2">
+                <Button
+                  size="lg"
+                  className="rounded-full bg-gradient-to-r from-primary to-secondary px-7 py-6 text-base font-medium text-white shadow-glow transition-all hover:scale-[1.03] hover:shadow-[0_0_60px_hsl(var(--secondary)/0.4)]"
+                  asChild
+                >
+                  <a href="#dashboard">
+                    Explore Live Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
                 </Button>
-                <Button variant="outline" asChild>
-                  <a href="#about">Explore Product</a>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-slate-200 bg-white/70 px-7 py-6 text-base backdrop-blur hover:bg-white"
+                  asChild
+                >
+                  <Link to="/login">Get Started</Link>
                 </Button>
               </div>
 
-              <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {stats.map((stat) => (
-                  <Card key={stat.label} className="glass-panel px-4 py-3 text-center">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 pt-6 sm:grid-cols-4">
+                {stats.map((s) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="rounded-2xl border border-white/60 bg-white/60 px-4 py-3 backdrop-blur-xl shadow-soft"
+                  >
                     <p className="text-2xl font-semibold text-foreground">
-                      {stat.value}
-                      {stat.suffix ?? ""}
+                      <CountUp to={s.value} suffix={s.suffix ?? ""} decimals={s.suffix === "%" ? 1 : 0} />
                     </p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </Card>
+                    <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
 
             <motion.div
-              className="relative"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.1 }}
+              transition={{ duration: 1, delay: 0.1 }}
+              className="relative"
             >
-              <div className="relative mx-auto w-full max-w-md aspect-square">
-                <motion.div
-                  className="absolute inset-0 rounded-[32%] bg-gradient-to-br from-primary/40 via-white/60 to-secondary/40 blur-2xl"
-                  animate={{ opacity: [0.6, 0.9, 0.6] }}
-                  transition={{ duration: 6, repeat: Infinity }}
-                />
-                <motion.div
-                  className="relative z-10 h-full w-full rounded-[32%] glass-panel p-8"
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 5, repeat: Infinity }}
-                >
-                  <div className="absolute inset-x-6 top-1/2 h-16 -translate-y-1/2 rounded-full bg-gradient-to-r from-primary/80 via-white to-secondary/80 shadow-glow" />
-                  <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/80 shadow-warm" />
-                  <div className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                    <Heart className="h-6 w-6 text-white pulse-heart" />
-                  </div>
-                  <div className="absolute left-12 top-10 flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs text-muted-foreground shadow-soft">
-                    <Cloud className="h-3 w-3 text-primary" />
-                    Live Sync
-                  </div>
-                  <div className="absolute right-12 bottom-12 flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs text-muted-foreground shadow-soft">
-                    <Sparkles className="h-3 w-3 text-secondary" />
-                    Smart Sensors
-                  </div>
-                </motion.div>
-              </div>
-              <div className="mt-8 flex justify-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  FDA-inspired safety
-                </div>
-                <div className="flex items-center gap-2">
-                  <Wifi className="h-4 w-4 text-primary" />
-                  Real-time stream
-                </div>
+              <SmartBelt />
+              <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500" /> FDA-inspired safety
+                </span>
+                <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">
+                  <Wifi className="h-4 w-4 text-primary" /> 5G &amp; Wi-Fi ready
+                </span>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* About */}
-      <section id="about" className="py-20 bg-gradient-to-b from-background to-muted/40">
-        <div className="container mx-auto px-4">
+      {/* ===================== TRUST BAR ===================== */}
+      <section className="border-y border-border/60 bg-white">
+        <div className="container mx-auto px-6 py-10">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {trustItems.map((t, i) => {
+              const Icon = t.icon;
+              return (
+                <motion.div
+                  key={t.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  className="flex items-center justify-center gap-3 text-muted-foreground"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm font-medium uppercase tracking-wider text-foreground/80">{t.label}</span>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== ABOUT ===================== */}
+      <section id="about" className="py-28">
+        <div className="container mx-auto px-6">
           <motion.div
-            className="grid lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
+            className="grid gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center"
           >
-            <div>
-              <Badge className="bg-primary/10 text-primary border-primary/20">About Product</Badge>
-              <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-                A premium maternal + fetal monitoring ecosystem designed for continuous peace of mind.
+            <div className="space-y-6">
+              <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-primary">
+                About the Product
+              </Badge>
+              <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                A premium maternal &amp; fetal monitoring ecosystem designed for{" "}
+                <span className="text-gradient">continuous peace of mind.</span>
               </h2>
-              <p className="mt-4 text-muted-foreground text-lg text-balance">
+              <p className="text-balance text-lg leading-relaxed text-muted-foreground">
                 Maternal Care pairs an intelligent wearable belt with an ESP32-powered sensor array and Firebase
-                cloud streaming. Families and care teams can see vital signals in real time, detect anomalies early,
+                cloud streaming. Families and care teams see vital signals in real time, detect anomalies early,
                 and respond with confidence.
               </p>
-              <div className="mt-6 flex flex-wrap gap-4">
-                <Card className="glass-panel px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <Baby className="h-5 w-5 text-primary" />
+
+              <div className="grid gap-4 pt-4 sm:grid-cols-2">
+                {[
+                  { icon: Baby, title: "Fetal Wellbeing", text: "Movement and heartbeat insights." },
+                  { icon: Stethoscope, title: "Clinical Ready", text: "Professional-grade signals." },
+                  { icon: Database, title: "Firebase Cloud", text: "Secure streaming with audit logs." },
+                  { icon: ShieldCheck, title: "Privacy First", text: "Encrypted, HIPAA-aligned." },
+                ].map(({ icon: Icon, title, text }) => (
+                  <div
+                    key={title}
+                    className="flex items-start gap-3 rounded-2xl border border-border/60 bg-white p-4 shadow-soft transition hover:-translate-y-1 hover:shadow-glow"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </span>
                     <div>
-                      <p className="font-medium">Fetal Wellbeing</p>
-                      <p className="text-xs text-muted-foreground">Movement + heartbeat insights.</p>
+                      <p className="font-medium">{title}</p>
+                      <p className="text-sm text-muted-foreground">{text}</p>
                     </div>
                   </div>
-                </Card>
-                <Card className="glass-panel px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <Stethoscope className="h-5 w-5 text-secondary" />
-                    <div>
-                      <p className="font-medium">Clinical Ready</p>
-                      <p className="text-xs text-muted-foreground">Professional-grade signals.</p>
-                    </div>
-                  </div>
-                </Card>
+                ))}
               </div>
             </div>
-            <div className="space-y-4">
-              <Card className="glass-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Cpu className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Smart Sensor Core</p>
-                    <p className="text-xs text-muted-foreground">Adaptive calibration + noise filtering.</p>
+
+            {/* How it works visual */}
+            <div className="relative">
+              <div className="absolute inset-0 -z-10 rounded-[40px] bg-gradient-to-br from-primary/15 via-accent/15 to-secondary/15 blur-2xl" />
+              <Card className="overflow-hidden rounded-[32px] border-white/60 bg-white/80 backdrop-blur-xl shadow-soft">
+                <CardContent className="p-8">
+                  <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">Data Pipeline</p>
+                  <div className="mt-6 space-y-3">
+                    {[
+                      { icon: Heart, label: "Sensor Belt", sub: "Captures 7 live signals" },
+                      { icon: Cpu, label: "ESP32 Edge", sub: "Adaptive calibration" },
+                      { icon: Cloud, label: "Firebase Realtime", sub: "Encrypted streaming" },
+                      { icon: Activity, label: "Live Dashboard", sub: "Family + clinicians" },
+                    ].map(({ icon: Icon, label, sub }, i) => (
+                      <div key={label} className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 rounded-2xl border border-border/60 bg-white p-3 shadow-soft">
+                          <p className="text-sm font-semibold">{label}</p>
+                          <p className="text-xs text-muted-foreground">{sub}</p>
+                        </div>
+                        {i < 3 && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/40" />}
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </Card>
-              <Card className="glass-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Database className="h-5 w-5 text-secondary" />
-                  <div>
-                    <p className="font-medium">Firebase Cloud</p>
-                    <p className="text-xs text-muted-foreground">Secure streaming + audit logs.</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="glass-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Globe2 className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Global Care Network</p>
-                    <p className="text-xs text-muted-foreground">Remote specialists always on standby.</p>
-                  </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20">
-        <div className="container mx-auto px-4">
+      {/* ===================== FEATURES ===================== */}
+      <section id="features" className="bg-gradient-to-b from-white to-rose-50/40 py-28">
+        <div className="container mx-auto px-6">
           <motion.div
-            className="text-center max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
+            className="mx-auto max-w-2xl text-center"
           >
-            <Badge className="bg-secondary/10 text-secondary border-secondary/20">Core Features</Badge>
-            <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-              Everything you need for premium maternal safety.
+            <Badge variant="outline" className="rounded-full border-secondary/30 bg-secondary/10 text-secondary">
+              Core Features
+            </Badge>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+              Everything you need for{" "}
+              <span className="text-gradient">premium maternal safety.</span>
             </h2>
-            <p className="mt-4 text-muted-foreground text-lg text-balance">
-              Seven real-time signals, intelligent alerts, and cloud-first reliability.
+            <p className="mt-5 text-balance text-lg text-muted-foreground">
+              Seven realtime signals, intelligent alerts, and cloud-first reliability — beautifully integrated.
             </p>
           </motion.div>
-          <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
+
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f, i) => {
+              const Icon = f.icon;
               return (
                 <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
+                  key={f.title}
+                  initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
                 >
-                  <Card className="glass-panel h-full metric-glow">
-                    <CardHeader>
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-primary" />
+                  <Card className="group h-full rounded-3xl border-white bg-white p-2 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-glow">
+                    <CardHeader className="space-y-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary transition-transform duration-500 group-hover:scale-110">
+                        <Icon className="h-6 w-6" />
                       </div>
-                      <CardTitle className="mt-4 text-lg">{feature.title}</CardTitle>
+                      <CardTitle className="text-lg font-semibold">{f.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">{feature.text}</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{f.text}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -477,235 +707,239 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How it Works */}
-      <section id="how-it-works" className="py-20 bg-muted/40">
-        <div className="container mx-auto px-4">
+      {/* ===================== LIVE DASHBOARD ===================== */}
+      <section id="dashboard" className="relative py-28">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sky-50/40 via-white to-white" />
+        <div className="container mx-auto px-6">
           <motion.div
-            className="text-center max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
+            className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
           >
-            <Badge className="bg-primary/10 text-primary border-primary/20">How It Works</Badge>
-            <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-              Sensor Belt → ESP32 → Firebase → Live Dashboard
-            </h2>
-            <p className="mt-4 text-muted-foreground text-lg text-balance">
-              A seamless data journey that prioritizes speed, accuracy, and reliability.
-            </p>
-          </motion.div>
-          <div className="mt-10 grid md:grid-cols-4 gap-6 text-center">
-            {[
-              { title: "Sensor Belt", icon: Heart, text: "Smart textile + biomedical sensors." },
-              { title: "ESP32 Core", icon: Cpu, text: "Edge processing & signal cleaning." },
-              { title: "Firebase", icon: Database, text: "Real-time data lake + API." },
-              { title: "Dashboard", icon: LineChart, text: "Instant insights everywhere." },
-            ].map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={step.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="glass-panel h-full">
-                    <CardHeader className="items-center">
-                      <div className="h-12 w-12 rounded-full bg-secondary/20 flex items-center justify-center">
-                        <Icon className="h-6 w-6 text-secondary" />
-                      </div>
-                      <CardTitle className="mt-4 text-base">{step.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{step.text}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Live Dashboard */}
-      <section id="dashboard" className="py-20">
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <div>
-              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+            <div className="space-y-4">
+              <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-primary">
                 Live Dashboard
               </Badge>
-              <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-                Real-time maternal vitals streaming from Firebase.
+              <h2 className="max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                Realtime vitals streaming from the belt to your screen.
               </h2>
             </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${onlineStatus ? "bg-emerald-500" : "bg-rose-500"}`} />
-                {onlineStatus ? "Sensor Online" : "Offline"}
+            <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white px-4 py-3 shadow-soft">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Last update</p>
+                <p className="text-sm font-medium">{lastUpdatedLabel}</p>
               </div>
-              <div className="h-4 w-px bg-border" />
-              <div>Last updated: {lastUpdatedLabel}</div>
             </div>
           </motion.div>
 
-          {alerts.length > 0 && (
-            <div className="mt-6 space-y-3">
-              {alerts.map((alert) => (
-                <motion.div
-                  key={alert.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="glass-panel flex items-center gap-3 border-destructive/30 bg-destructive/10 px-4 py-3"
-                >
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  <div>
-                    <p className="font-medium text-destructive">{alert.title}</p>
-                    <p className="text-xs text-muted-foreground">{alert.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-8 grid lg:grid-cols-3 gap-6">
-            <Card className="glass-panel metric-glow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Heart className="h-4 w-4 text-rose-500 pulse-heart" />
-                  Maternal Heart Rate
+          {/* Top metric row */}
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Heart rate */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-glow">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Heart className="h-4 w-4 text-rose-500 pulse-heart" /> Heart Rate
                 </CardTitle>
+                <StatusChip status={hrStatus} />
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{heartRate || "--"} BPM</div>
-                <div className="text-xs text-muted-foreground">Live bpm stream from MAX30105.</div>
-                <ChartContainer config={chartConfig}>
-                  <LineGraph data={history.heartRate}>
-                    <LineShape type="monotone" dataKey="value" stroke="var(--color-heartRate)" strokeWidth={2} dot={false} />
-                    <XAxis dataKey="time" hide />
-                    <YAxis hide />
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  </LineGraph>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel metric-glow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Activity className="h-4 w-4 text-primary" />
-                  SpO2 Saturation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{spo2 || "--"}%</div>
-                <div className="text-xs text-muted-foreground">Oxygen level with radial gauge.</div>
-                <div className="h-36">
-                  <ChartContainer config={chartConfig}>
-                    <RadialBarChart
-                      data={spo2Data}
-                      startAngle={90}
-                      endAngle={-270}
-                      innerRadius="70%"
-                      outerRadius="100%"
-                    >
-                      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                      <RadialBar dataKey="value" cornerRadius={10} background />
-                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                    </RadialBarChart>
-                  </ChartContainer>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="text-4xl font-semibold">{heartRate || "--"}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">BPM</span>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel metric-glow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Thermometer className="h-4 w-4 text-secondary" />
-                  Body Temperature
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{temperature ? temperature.toFixed(1) : "--"}°C</div>
-                <div className="flex items-end gap-4">
-                  <div className="relative h-28 w-10 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="absolute bottom-0 left-0 right-0 rounded-full bg-gradient-to-t from-primary to-secondary"
-                      style={{ height: `${tempLevel * 100}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Smart thermometer meter tracking subtle shifts.
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-6 grid lg:grid-cols-3 gap-6">
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Wind className="h-4 w-4 text-primary" />
-                  Respiration Rate
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{respiration || "--"} bpm</div>
-                <motion.div
-                  className="h-20 w-20 rounded-full bg-primary/15 flex items-center justify-center"
-                  animate={{ scale: [1, 1 + respLevel * 0.3, 1] }}
-                  transition={{ duration: 2.2, repeat: Infinity }}
-                >
-                  <Wind className="h-6 w-6 text-primary" />
-                </motion.div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Activity className="h-4 w-4 text-secondary" />
-                  ECG Monitor
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground">Live ECG waveform</div>
-                <div className="h-28">
-                  <ChartContainer config={chartConfig}>
-                    <LineGraph data={history.ecg}>
-                      <LineShape type="monotone" dataKey="value" stroke="var(--color-ecg)" strokeWidth={2} dot={false} />
+                <div className="-mx-2 h-20">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
+                    <LineGraph data={history.heartRate}>
+                      <LineShape
+                        type="monotone"
+                        dataKey="value"
+                        stroke="hsl(var(--accent-warm))"
+                        strokeWidth={2.5}
+                        dot={false}
+                        isAnimationActive
+                      />
                       <XAxis dataKey="time" hide />
-                      <YAxis hide />
+                      <YAxis hide domain={["auto", "auto"]} />
                       <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                     </LineGraph>
                   </ChartContainer>
                 </div>
-                <div className="text-xs text-muted-foreground">Current ECG: {ecgReading || "--"} mV</div>
               </CardContent>
             </Card>
 
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Activity className="h-4 w-4 text-emerald-500" />
-                  Pressure / Movement
+            {/* SpO2 */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-glow">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Droplets className="h-4 w-4 text-primary" /> SpO₂
+                </CardTitle>
+                <StatusChip status={oxStatus} />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="text-4xl font-semibold">{spo2 || "--"}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">%</span>
+                </div>
+                <div className="relative h-24">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
+                    <RadialBarChart
+                      data={spo2Data}
+                      startAngle={90}
+                      endAngle={-270}
+                      innerRadius="72%"
+                      outerRadius="100%"
+                    >
+                      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                      <RadialBar dataKey="value" cornerRadius={10} background fill="hsl(var(--primary))" />
+                    </RadialBarChart>
+                  </ChartContainer>
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-medium text-primary">
+                    {spo2 ? `${spo2}%` : "—"}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Temperature */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-glow">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Thermometer className="h-4 w-4 text-secondary" /> Temperature
+                </CardTitle>
+                <StatusChip status={tStatus} />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="text-4xl font-semibold">{temperature ? temperature.toFixed(1) : "--"}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">°C</span>
+                </div>
+                <div className="flex items-end gap-4">
+                  <div className="relative h-20 w-7 overflow-hidden rounded-full bg-muted">
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 rounded-full bg-gradient-to-t from-primary to-secondary"
+                      animate={{ height: `${tempLevel * 100}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
+                    Smart thermometer tracks subtle shifts toward fever.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Respiration */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-glow">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Wind className="h-4 w-4 text-primary" /> Respiration
+                </CardTitle>
+                <StatusChip status={rStatus} />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="text-4xl font-semibold">{respiration || "--"}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">bpm</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <motion.div
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Wind className="h-6 w-6 text-primary" />
+                  </motion.div>
+                  <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
+                    Breath rhythm captured by acoustic sensing.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Second row */}
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            {/* ECG wide */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft lg:col-span-2">
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Activity className="h-4 w-4 text-secondary" /> ECG Live Waveform
+                  </CardTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Current value: <span className="font-medium text-foreground">{ecgReading || "—"} mV</span>
+                  </p>
+                </div>
+                <Badge variant="outline" className="rounded-full border-secondary/30 bg-secondary/5 text-secondary">
+                  AD8232
+                </Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="h-44">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
+                    <LineGraph data={history.ecg}>
+                      <defs>
+                        <linearGradient id="ecgStroke" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="hsl(var(--secondary))" />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <LineShape
+                        type="monotone"
+                        dataKey="value"
+                        stroke="url(#ecgStroke)"
+                        strokeWidth={2.5}
+                        dot={false}
+                        isAnimationActive
+                      />
+                      <XAxis dataKey="time" hide />
+                      <YAxis hide domain={["auto", "auto"]} />
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    </LineGraph>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pressure / movement */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft">
+              <CardHeader className="space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Signal className="h-4 w-4 text-emerald-500" /> Pressure / Movement
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{pressure || "--"} AU</div>
-                <div className="h-24">
-                  <ChartContainer config={chartConfig}>
+                <div>
+                  <span className="text-3xl font-semibold">{pressure || "--"}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">AU</span>
+                </div>
+
+                {/* Animated bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                    <span>Calm</span>
+                    <span>Active</span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-muted">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400"
+                      animate={{ width: `${Math.max(8, pressureLevel * 100)}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+
+                <div className="h-20">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
                     <BarChart data={history.pressure}>
-                      <Bar dataKey="value" fill="var(--color-pressure)" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="value" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
                       <XAxis dataKey="time" hide />
                       <YAxis hide />
                       <ChartTooltip content={<ChartTooltipContent hideLabel />} />
@@ -716,232 +950,242 @@ const Landing = () => {
             </Card>
           </div>
 
-          <div className="mt-6 grid lg:grid-cols-3 gap-6">
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Mic className="h-4 w-4 text-primary" />
-                  Mic Level
-                </CardTitle>
+          {/* Third row */}
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            {/* Trend graph 2-cols */}
+            <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft lg:col-span-2">
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Activity className="h-4 w-4 text-primary" /> Multi-Vital Trend
+                  </CardTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Heart rate, SpO₂ and temperature aligned in time.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--accent-warm))]" /> Heart
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--primary))]" /> SpO₂
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--secondary))]" /> Temp
+                  </span>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{micLevel || "--"} dB</div>
-                <div className="flex items-end gap-2 h-20">
-                  {Array.from({ length: MIC_BAR_COUNT }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="flex-1 rounded-full bg-primary/20"
-                      style={{
-                        height: `${calculateMicBarHeight(index, micIntensity)}%`,
-                      }}
-                    />
-                  ))}
+              <CardContent>
+                <div className="h-56">
+                  <ChartContainer config={chartConfig} className="aspect-auto h-full w-full">
+                    <AreaChart data={trendData}>
+                      <defs>
+                        <linearGradient id="hrFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--accent-warm))" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="hsl(var(--accent-warm))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="spo2Fill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                      <Area
+                        type="monotone"
+                        dataKey="heartRate"
+                        stroke="hsl(var(--accent-warm))"
+                        strokeWidth={2}
+                        fill="url(#hrFill)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="spo2"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="url(#spo2Fill)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="temperature"
+                        stroke="hsl(var(--secondary))"
+                        strokeWidth={2}
+                        fill="transparent"
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </AreaChart>
+                  </ChartContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Wifi className="h-4 w-4 text-emerald-500" />
-                  Sensor Online
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-3xl font-semibold">{onlineStatus ? "Connected" : "Offline"}</div>
-                <Badge className={onlineStatus ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}>
-                  {onlineStatus ? "All sensors active" : "No signal detected"}
-                </Badge>
-                <div className="text-xs text-muted-foreground">Auto alert triggers on disconnect.</div>
-              </CardContent>
-            </Card>
+            {/* Alerts + Sensor status */}
+            <div className="space-y-6">
+              <Card className="rounded-3xl border-white/70 bg-white shadow-soft">
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Bell className="h-4 w-4 text-primary" /> Alerts
+                  </CardTitle>
+                  <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-primary">
+                    {alerts.length}
+                  </Badge>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {alerts.map((a, i) => {
+                    const s = statusStyle[a.status];
+                    return (
+                      <motion.div
+                        key={`${a.title}-${i}`}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: i * 0.05 }}
+                        className={`flex items-start gap-3 rounded-2xl border p-3 ${s.chip}`}
+                      >
+                        <div className={`mt-1 h-2 w-2 rounded-full ${s.dot}`} />
+                        <div>
+                          <p className="text-sm font-medium">{a.title}</p>
+                          <p className="text-xs opacity-80">{a.description}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
 
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Cloud className="h-4 w-4 text-secondary" />
-                  Last Updated
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-3xl font-semibold">{lastUpdatedLabel}</div>
-                <div className="text-xs text-muted-foreground">Real-time Firebase listeners in sync.</div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                  Live values update instantly.
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <Card className="rounded-3xl border-white/70 bg-white shadow-soft">
+                <CardHeader className="space-y-0 pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Mic className="h-4 w-4 text-secondary" /> Sensor Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between rounded-2xl bg-muted/50 px-3 py-2 text-sm">
+                    <span className="flex items-center gap-2">
+                      <Wifi className="h-4 w-4 text-primary" /> Belt Online
+                    </span>
+                    <StatusChip status={Number(onlineStatus) === 1 ? "healthy" : "warning"} />
+                  </div>
 
-          <div className="mt-10 grid lg:grid-cols-3 gap-6">
-            <Card className="glass-panel lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-primary" />
-                  Live ECG Waveform
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-64">
-                <ChartContainer config={chartConfig}>
-                  <LineGraph data={history.ecg}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <LineShape type="monotone" dataKey="value" stroke="var(--color-ecg)" strokeWidth={2} dot={false} />
-                    <XAxis dataKey="time" hide />
-                    <YAxis hide />
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  </LineGraph>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-secondary" />
-                  SpO2 Radial
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-64 flex items-center justify-center">
-                <ChartContainer config={chartConfig}>
-                  <RadialBarChart
-                    data={spo2Data}
-                    startAngle={90}
-                    endAngle={-270}
-                    innerRadius="60%"
-                    outerRadius="100%"
-                  >
-                    <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                    <RadialBar dataKey="value" cornerRadius={10} background />
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  </RadialBarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-6 grid lg:grid-cols-2 gap-6">
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-primary" />
-                  Temperature Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-56">
-                <ChartContainer config={chartConfig}>
-                  <AreaChart data={history.temperature}>
-                    <defs>
-                      <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-temperature)" stopOpacity={0.6} />
-                        <stop offset="95%" stopColor="var(--color-temperature)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="value" stroke="var(--color-temperature)" fill="url(#tempGradient)" />
-                    <XAxis dataKey="time" hide />
-                    <YAxis hide />
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  </AreaChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-secondary" />
-                  Multi-Metric Comparison
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-56">
-                <ChartContainer config={chartConfig}>
-                  <LineGraph data={multiMetricHistory}>
-                    <LineShape type="monotone" dataKey="heartRate" stroke="var(--color-heartRate)" strokeWidth={2} dot={false} />
-                    <LineShape type="monotone" dataKey="temperature" stroke="var(--color-temperature)" strokeWidth={2} dot={false} />
-                    <LineShape type="monotone" dataKey="spo2" stroke="var(--color-spo2)" strokeWidth={2} dot={false} />
-                    <XAxis dataKey="time" hide />
-                    <YAxis hide />
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  </LineGraph>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+                  {/* Mic visualizer */}
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Mic Level</span>
+                      <span className="font-medium text-foreground">{Math.round(micLevel)}</span>
+                    </div>
+                    <div className="flex h-12 items-end gap-1">
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const phase = (i + 1) / 24;
+                        const base = 0.2 + (i % 3) * 0.05;
+                        const target = clamp(base + micIntensity * (0.4 + phase * 0.6), 0.1, 1);
+                        return (
+                          <motion.div
+                            key={i}
+                            className="flex-1 rounded-full bg-gradient-to-t from-primary to-secondary"
+                            animate={{ height: `${target * 100}%` }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Future Scope */}
-      <section id="future" className="py-20 bg-muted/40">
-        <div className="container mx-auto px-4">
+      {/* ===================== FUTURE AI ===================== */}
+      <section id="future" className="relative overflow-hidden bg-gradient-to-b from-white via-rose-50/40 to-sky-50/40 py-28">
+        <div className="container mx-auto px-6">
           <motion.div
-            className="text-center max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-2xl text-center"
           >
-            <Badge className="bg-primary/10 text-primary border-primary/20">Future Scope</Badge>
-            <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">Built for tomorrow's care.</h2>
-            <p className="mt-4 text-muted-foreground text-lg text-balance">
-              The Maternal Care platform scales from the home to the hospital.
+            <Badge variant="outline" className="rounded-full border-secondary/30 bg-secondary/10 text-secondary">
+              The Road Ahead
+            </Badge>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+              Tomorrow's care, <span className="text-gradient">predicted today.</span>
+            </h2>
+            <p className="mt-5 text-balance text-lg text-muted-foreground">
+              Predictive intelligence, doctor companions, and full hospital integrations are next.
             </p>
           </motion.div>
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
-            {futureScope.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="glass-panel h-full">
-                  <CardHeader>
-                    <CardTitle>{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{item.text}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+
+          <div className="mt-16 grid gap-6 lg:grid-cols-3">
+            {aiScope.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div
+                  key={s.title}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <Card className="group relative h-full overflow-hidden rounded-3xl border-white/60 bg-white p-2 shadow-soft transition hover:-translate-y-2 hover:shadow-glow">
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent-warm opacity-70" />
+                    <CardHeader className="space-y-4 pt-8">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary transition-transform duration-500 group-hover:rotate-6">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <CardTitle className="text-xl">{s.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="leading-relaxed text-muted-foreground">{s.text}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Team */}
-      <section id="team" className="py-20">
-        <div className="container mx-auto px-4">
+      {/* ===================== TEAM ===================== */}
+      <section id="team" className="py-28">
+        <div className="container mx-auto px-6">
           <motion.div
-            className="text-center max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-2xl text-center"
           >
-            <Badge className="bg-secondary/10 text-secondary border-secondary/20">Team</Badge>
-            <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-              Built by clinicians, engineers, and product designers.
+            <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-primary">
+              Our Team
+            </Badge>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+              The minds behind <span className="text-gradient">Maternal Care.</span>
             </h2>
+            <p className="mt-5 text-balance text-lg text-muted-foreground">
+              A multidisciplinary team blending clinicians, engineers, and designers.
+            </p>
           </motion.div>
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
-            {team.map((member, index) => (
+
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {team.map((m, i) => (
               <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
+                key={m.name}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5, delay: i * 0.07 }}
               >
-                <Card className="glass-panel h-full text-center">
-                  <CardHeader>
-                    <div className="mx-auto h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                      <Users className="h-6 w-6 text-white" />
+                <Card className="group relative overflow-hidden rounded-3xl border-white/70 bg-white p-2 shadow-soft transition hover:-translate-y-2 hover:shadow-glow">
+                  <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-2xl font-semibold text-white shadow-glow transition-transform duration-500 group-hover:scale-110">
+                      {m.initial}
                     </div>
-                    <CardTitle className="mt-4">{member.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
+                    <div>
+                      <p className="text-base font-semibold">{m.name}</p>
+                      <p className="text-sm text-muted-foreground">{m.role}</p>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -950,39 +1194,100 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 border-t border-border bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft">
-                  <Heart className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-lg font-semibold text-gradient">MaternalCare</span>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                A premium healthcare startup reimagining pregnancy monitoring through real-time biosensing and
-                predictive intelligence.
+      {/* ===================== CTA + FOOTER ===================== */}
+      <section className="px-6 pb-16">
+        <div className="container mx-auto overflow-hidden rounded-[40px] bg-gradient-to-br from-primary via-secondary to-accent-warm p-10 text-white shadow-glow sm:p-16">
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+            <div className="space-y-4">
+              <Badge className="border-white/30 bg-white/10 text-white">Ready when you are</Badge>
+              <h3 className="text-balance text-3xl font-semibold leading-tight sm:text-4xl">
+                Bring premium maternal monitoring to your family or hospital.
+              </h3>
+              <p className="max-w-xl text-balance text-white/90">
+                Get early access to the Maternal Care wearable belt and the live cloud dashboard.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 text-sm text-muted-foreground">
-              <span>hello@maternalcare.health</span>
-              <span>+1 (415) 000-2222</span>
-              <span>San Francisco • Bangalore</span>
+            <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
+              <Button
+                size="lg"
+                className="rounded-full bg-white px-7 py-6 text-base font-medium text-primary shadow-soft hover:bg-white/90"
+                asChild
+              >
+                <Link to="/login">Get Started</Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-white/40 bg-transparent px-7 py-6 text-base text-white hover:bg-white/10"
+                asChild
+              >
+                <Link to="/contact">Talk to us</Link>
+              </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border/60 bg-white">
+        <div className="container mx-auto grid gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-3">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-primary shadow-soft">
+                <Heart className="h-4 w-4 text-white" />
+              </span>
+              <span className="text-lg font-semibold text-gradient">MaternalCare</span>
+            </Link>
+            <p className="text-sm text-muted-foreground">
+              Premium real-time monitoring for moms and babies, everywhere.
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Product</p>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li><a href="#features" className="hover:text-primary">Features</a></li>
+              <li><a href="#dashboard" className="hover:text-primary">Live Dashboard</a></li>
+              <li><a href="#future" className="hover:text-primary">Future</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Company</p>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              <li><a href="#about" className="hover:text-primary">About</a></li>
+              <li><a href="#team" className="hover:text-primary">Team</a></li>
+              <li><Link to="/contact" className="hover:text-primary">Contact</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">Stay in touch</p>
+            <div className="mt-4 flex items-center gap-3 text-muted-foreground">
+              <a href="#" className="rounded-full border border-border/70 p-2 hover:text-primary"><Twitter className="h-4 w-4" /></a>
+              <a href="#" className="rounded-full border border-border/70 p-2 hover:text-primary"><Linkedin className="h-4 w-4" /></a>
+              <a href="#" className="rounded-full border border-border/70 p-2 hover:text-primary"><Github className="h-4 w-4" /></a>
+              <a href="#" className="rounded-full border border-border/70 p-2 hover:text-primary"><Mail className="h-4 w-4" /></a>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-border/60">
+          <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row">
+            <p>© {new Date().getFullYear()} Maternal Care. All rights reserved.</p>
+            <p className="flex items-center gap-1">
+              Made with <Heart className="h-3 w-3 text-rose-500" /> for safer pregnancies.
+            </p>
           </div>
         </div>
       </footer>
 
+      {/* Back to top */}
       <AnimatePresence>
         {showTop && (
           <motion.button
-            className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full bg-primary text-white shadow-glow flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            key="totop"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-glow transition hover:scale-110"
+            aria-label="Back to top"
           >
             <ArrowUp className="h-5 w-5" />
           </motion.button>
