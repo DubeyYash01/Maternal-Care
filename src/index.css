@@ -201,6 +201,7 @@
   }
 
   .text-balance {
+    text-wrap: pretty;
     text-wrap: balance;
   }
 

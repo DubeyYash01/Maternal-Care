@@ -116,19 +116,23 @@ const MIC_BAR_SCALE = 60;
 const MIC_BAR_INDEX_OFFSET = 2;
 const MIC_BAR_INDEX_DIVISOR = 10;
 
-const SPO2_LOW_THRESHOLD = 95;
-const FEVER_TEMP_THRESHOLD = 37.5;
-const HEART_RATE_HIGH_THRESHOLD = 120;
-const HEART_RATE_LOW_THRESHOLD = 55;
-const SENSOR_OFFLINE_VALUE = 0;
+// Default demo thresholds; adjust for clinical guidelines or deployments.
+const ALERT_THRESHOLDS = {
+  spo2Low: 95,
+  feverTempC: 37.5,
+  heartRateHigh: 120,
+  heartRateLow: 55,
+  sensorOfflineValue: 0,
+};
 
 const clampValue = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-const calculateMicBarHeight = (index: number, intensity: number) =>
-  MIC_BAR_BASE_HEIGHT +
-  Math.max(MIC_BAR_MIN_INTENSITY, intensity) *
-    MIC_BAR_SCALE *
-    ((index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR);
+// Scales mic visualizer bars based on intensity and index weighting.
+const calculateMicBarHeight = (index: number, intensity: number) => {
+  const clampedIntensity = Math.max(MIC_BAR_MIN_INTENSITY, intensity);
+  const barScale = (index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR;
+  return MIC_BAR_BASE_HEIGHT + clampedIntensity * MIC_BAR_SCALE * barScale;
+};
 
 const Landing = () => {
   const { sensorData, history, lastUpdated, ecgValue } = useRealtimeSensors();
@@ -181,28 +185,31 @@ const Landing = () => {
 
   const alerts = useMemo(() => {
     const items: { title: string; description: string }[] = [];
-    if (sensorData.maxSpO2 !== null && sensorData.maxSpO2 < SPO2_LOW_THRESHOLD) {
-      items.push({ title: "Low Oxygen Alert", description: `SpO2 below ${SPO2_LOW_THRESHOLD}% threshold.` });
+    if (sensorData.maxSpO2 !== null && sensorData.maxSpO2 < ALERT_THRESHOLDS.spo2Low) {
+      items.push({
+        title: "Low Oxygen Alert",
+        description: `SpO2 below ${ALERT_THRESHOLDS.spo2Low}% threshold.`,
+      });
     }
-    if (sensorData.tempC !== null && sensorData.tempC > FEVER_TEMP_THRESHOLD) {
+    if (sensorData.tempC !== null && sensorData.tempC > ALERT_THRESHOLDS.feverTempC) {
       items.push({
         title: "Fever Alert",
-        description: `Temperature above ${FEVER_TEMP_THRESHOLD.toFixed(1)}°C.`,
+        description: `Temperature above ${ALERT_THRESHOLDS.feverTempC.toFixed(1)}°C.`,
       });
     }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm > HEART_RATE_HIGH_THRESHOLD) {
+    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm > ALERT_THRESHOLDS.heartRateHigh) {
       items.push({
         title: "High Heart Rate",
-        description: `Maternal heart rate above ${HEART_RATE_HIGH_THRESHOLD} BPM.`,
+        description: `Maternal heart rate above ${ALERT_THRESHOLDS.heartRateHigh} BPM.`,
       });
     }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm < HEART_RATE_LOW_THRESHOLD) {
+    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm < ALERT_THRESHOLDS.heartRateLow) {
       items.push({
         title: "Low Heart Rate",
-        description: `Maternal heart rate below ${HEART_RATE_LOW_THRESHOLD} BPM.`,
+        description: `Maternal heart rate below ${ALERT_THRESHOLDS.heartRateLow} BPM.`,
       });
     }
-    if (sensorData.onLine !== null && Number(sensorData.onLine) === SENSOR_OFFLINE_VALUE) {
+    if (sensorData.onLine !== null && Number(sensorData.onLine) === ALERT_THRESHOLDS.sensorOfflineValue) {
       items.push({ title: "Sensor Offline", description: "No signal detected from the belt." });
     }
     return items;
