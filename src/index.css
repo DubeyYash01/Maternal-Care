@@ -201,7 +201,7 @@
   }
 
   .text-balance {
-    text-wrap: pretty;
+    text-wrap: pretty; /* fallback for browsers without text-wrap: balance */
     text-wrap: balance;
   }
 

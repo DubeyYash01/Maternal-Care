@@ -47,19 +47,19 @@ import { useRealtimeSensors } from "@/hooks/useRealtimeSensors";
 
 const heroMessages = [
   "AI-powered pregnancy monitoring.",
-  "Realtime maternal safety cloud.",
+  "Real-time maternal safety cloud.",
   "Luxury-grade fetal insights.",
 ];
 
 const stats = [
   { label: "Continuous Sensors", value: 7 },
-  { label: "Realtime Streams", value: 12 },
+  { label: "Real-time Streams", value: 12 },
   { label: "Countries Piloting", value: 8 },
   { label: "Signal Accuracy", value: 99.2, suffix: "%" },
 ];
 
 const features = [
-  { icon: Activity, title: "Realtime Monitoring", text: "Instant vitals sync with millisecond updates." },
+  { icon: Activity, title: "Real-time Monitoring", text: "Instant vitals sync with millisecond updates." },
   { icon: Heart, title: "ECG + Heart Rate", text: "Clinical-grade ECG and bpm precision." },
   { icon: Thermometer, title: "Temperature", text: "Detect fever spikes early with smart alerts." },
   { icon: Wind, title: "Respiration", text: "Track respiratory rhythm and stress levels." },
@@ -108,7 +108,7 @@ const chartConfig = {
   mic: { label: "Mic Level", color: "hsl(var(--accent-warm))" },
 };
 
-const SPLASH_SCREEN_DURATION_MS = 1300;
+const SPLASH_SCREEN_DURATION_MILLISECONDS = 1300;
 const MIC_BAR_COUNT = 8;
 const MIC_BAR_BASE_HEIGHT = 20;
 const MIC_BAR_MIN_INTENSITY = 0.15;
@@ -116,7 +116,7 @@ const MIC_BAR_SCALE = 60;
 const MIC_BAR_INDEX_OFFSET = 2;
 const MIC_BAR_INDEX_DIVISOR = 10;
 
-// Default demo thresholds; adjust for clinical guidelines or deployments.
+// Default demo thresholds; adjust for clinical guidelines or deployment needs.
 const ALERT_THRESHOLDS = {
   spo2Low: 95,
   feverTempC: 37.5,
@@ -143,7 +143,7 @@ const Landing = () => {
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), SPLASH_SCREEN_DURATION_MS);
+    const timer = setTimeout(() => setIsLoading(false), SPLASH_SCREEN_DURATION_MILLISECONDS);
     return () => clearTimeout(timer);
   }, []);
 
@@ -348,7 +348,7 @@ const Landing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Wifi className="h-4 w-4 text-primary" />
-                  Realtime stream
+                  Real-time stream
                 </div>
               </div>
             </motion.div>
@@ -499,7 +499,7 @@ const Landing = () => {
             {[
               { title: "Sensor Belt", icon: Heart, text: "Smart textile + biomedical sensors." },
               { title: "ESP32 Core", icon: Cpu, text: "Edge processing & signal cleaning." },
-              { title: "Firebase", icon: Database, text: "Realtime data lake + API." },
+              { title: "Firebase", icon: Database, text: "Real-time data lake + API." },
               { title: "Dashboard", icon: LineChart, text: "Instant insights everywhere." },
             ].map((step, index) => {
               const Icon = step.icon;
@@ -544,7 +544,7 @@ const Landing = () => {
                 Live Dashboard
               </Badge>
               <h2 className="mt-4 text-3xl lg:text-4xl font-semibold text-balance">
-                Realtime maternal vitals streaming from Firebase.
+                Real-time maternal vitals streaming from Firebase.
               </h2>
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -765,7 +765,7 @@ const Landing = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-3xl font-semibold">{lastUpdatedLabel}</div>
-                <div className="text-xs text-muted-foreground">Realtime Firebase listeners in sync.</div>
+                <div className="text-xs text-muted-foreground">Real-time Firebase listeners in sync.</div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                   Live values update instantly.
@@ -962,7 +962,7 @@ const Landing = () => {
                 <span className="text-lg font-semibold text-gradient">MaternalCare</span>
               </div>
               <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                A premium healthcare startup reimagining pregnancy monitoring through realtime biosensing and
+                A premium healthcare startup reimagining pregnancy monitoring through real-time biosensing and
                 predictive intelligence.
               </p>
             </div>
