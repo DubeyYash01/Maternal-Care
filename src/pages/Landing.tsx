@@ -680,14 +680,14 @@ const Landing = () => {
               <CardContent className="space-y-4">
                 <div className="text-sm text-muted-foreground">Live ECG waveform</div>
                 <div className="h-28">
-                  <ResponsiveContainer>
+                  <ChartContainer config={chartConfig}>
                     <LineGraph data={history.ecg}>
                       <LineShape type="monotone" dataKey="value" stroke="var(--color-ecg)" strokeWidth={2} dot={false} />
                       <XAxis dataKey="time" hide />
                       <YAxis hide />
                       <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                     </LineGraph>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 </div>
                 <div className="text-xs text-muted-foreground">Current ECG: {ecgReading || "--"} mV</div>
               </CardContent>
