@@ -10,31 +10,31 @@
   :root {
     /* Base colors - Clean white foundation */
     --background: 0 0% 100%;
-    --foreground: 210 11% 15%;
+    --foreground: 230 20% 12%;
 
     /* Card system - Soft, elevated appearance */
     --card: 0 0% 100%;
-    --card-foreground: 210 11% 15%;
+    --card-foreground: 230 20% 12%;
 
     /* Popover system */
     --popover: 0 0% 100%;
     --popover-foreground: 210 11% 15%;
 
-    /* Primary - Calming Teal */
-    --primary: 171 44% 50%; /* #2BB3A8 */
+    /* Primary - Sky Blue */
+    --primary: 198 86% 70%; /* #7DCBF4 */
     --primary-foreground: 0 0% 100%;
-    --primary-light: 171 44% 70%;
-    --primary-glow: 171 44% 85%;
+    --primary-light: 198 86% 82%;
+    --primary-glow: 198 86% 92%;
 
-    /* Secondary - Soft Blue */
-    --secondary: 198 79% 68%; /* #6FC3E8 */
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 198 79% 80%;
+    /* Secondary - Lavender */
+    --secondary: 256 84% 78%; /* #B8A2F4 */
+    --secondary-foreground: 235 18% 18%;
+    --secondary-light: 256 84% 88%;
 
-    /* Accent - Warm Pink (optional, supportive) */
-    --accent: 350 100% 88%; /* #FFC0CB */
-    --accent-foreground: 210 11% 15%;
-    --accent-warm: 350 68% 70%;
+    /* Accent - Soft Pink */
+    --accent: 336 100% 90%; /* #F7C0D8 */
+    --accent-foreground: 230 20% 12%;
+    --accent-warm: 336 72% 75%;
 
     /* Clinical Alert Colors */
     --success: 134 61% 41%; /* #28A745 */
@@ -45,13 +45,13 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Muted colors - Subtle backgrounds */
-    --muted: 210 11% 96%;
-    --muted-foreground: 210 11% 45%;
+    --muted: 220 24% 96%;
+    --muted-foreground: 230 14% 45%;
 
     /* Borders and inputs */
-    --border: 171 20% 90%;
-    --input: 171 20% 94%;
-    --ring: 171 44% 50%;
+    --border: 220 28% 90%;
+    --input: 220 28% 94%;
+    --ring: 198 86% 70%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
@@ -59,9 +59,9 @@
     --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted) / 0.3));
 
     /* Shadows - Soft, maternal */
-    --shadow-soft: 0 4px 20px hsl(var(--primary) / 0.1);
-    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.2);
-    --shadow-warm: 0 4px 20px hsl(var(--accent) / 0.15);
+    --shadow-soft: 0 12px 30px hsl(var(--primary) / 0.12);
+    --shadow-glow: 0 0 40px hsl(var(--secondary) / 0.25);
+    --shadow-warm: 0 10px 30px hsl(var(--accent) / 0.2);
 
     /* Radius */
     --radius: 1rem;
@@ -127,6 +127,10 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
   }
@@ -143,6 +147,34 @@
   .card-maternal {
     @apply bg-card border border-border rounded-2xl p-6 shadow-soft transition-all duration-300 
            hover:shadow-glow hover:-translate-y-1;
+  }
+
+  .glass-panel {
+    @apply bg-white/60 dark:bg-slate-900/70 border border-white/40 dark:border-white/10 backdrop-blur-xl shadow-soft;
+  }
+
+  .metric-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .metric-glow::after {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: radial-gradient(circle at top, hsl(var(--primary) / 0.25), transparent 60%);
+  }
+
+  .metric-glow:hover::after {
+    @apply opacity-100;
+  }
+
+  .bg-grid-soft {
+    background-image: radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .animated-gradient {
+    background-size: 300% 300%;
+    animation: gradientShift 12s ease infinite;
   }
 
   /* Vital Status Cards */
@@ -168,13 +200,35 @@
     @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }
 
+  .text-balance {
+    text-wrap: balance;
+  }
+
   /* Floating animation */
   .float-gentle {
     animation: float 3s ease-in-out infinite;
+  }
+
+  .pulse-heart {
+    animation: heartbeat 1.6s ease-in-out infinite;
   }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.08); }
+  40% { transform: scale(0.96); }
+  60% { transform: scale(1.1); }
+  80% { transform: scale(1); }
 }
