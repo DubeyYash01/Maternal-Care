@@ -31,7 +31,20 @@ type SensorHistory = {
   mic: HistoryEntry[];
 };
 
-const HISTORY_POINTS = 20;
+const CHART_HISTORY_LENGTH = 20;
+
+const FIREBASE_PATHS = {
+  maxHrBpm: "Sensor_data/MAX30105/maxHrBpm",
+  maxSpO2: "Sensor_data/MAX30105/maxSpO2",
+  tempC: "Sensor_data/TMP117/tempC",
+  respBpm: "Sensor_data/INMP441/respBpm",
+  ecgMappedmV: "Sensor_data/ADB232/ecgMappedmV",
+  ecgAdc: "Sensor_data/ADB232/ecgAdc",
+  fsrAU: "Sensor_data/FSR/fsrAU",
+  micLevel: "Sensor_data/INMP441/micLevel",
+  onLine: "Sensor_data/TMP117/onLine",
+  ecgLeadsOff: "Sensor_data/ADB232/ecgLeadsOff",
+};
 
 const formatTime = () =>
   new Date().toLocaleTimeString("en-US", {
@@ -50,7 +63,7 @@ const toNumber = (value: unknown) => {
 const appendHistory = (entries: HistoryEntry[], value: number | null) => {
   if (value === null) return entries;
   const next = [...entries, { time: formatTime(), value }];
-  return next.slice(-HISTORY_POINTS);
+  return next.slice(-CHART_HISTORY_LENGTH);
 };
 
 export const useRealtimeSensors = () => {
@@ -83,51 +96,51 @@ export const useRealtimeSensors = () => {
     const listeners = [
       {
         key: "maxHrBpm" as const,
-        path: "Sensor_data/MAX30105/maxHrBpm",
+        path: FIREBASE_PATHS.maxHrBpm,
         historyKey: "heartRate" as const,
       },
       {
         key: "maxSpO2" as const,
-        path: "Sensor_data/MAX30105/maxSpO2",
+        path: FIREBASE_PATHS.maxSpO2,
         historyKey: "spo2" as const,
       },
       {
         key: "tempC" as const,
-        path: "Sensor_data/TMP117/tempC",
+        path: FIREBASE_PATHS.tempC,
         historyKey: "temperature" as const,
       },
       {
         key: "respBpm" as const,
-        path: "Sensor_data/INMP441/respBpm",
+        path: FIREBASE_PATHS.respBpm,
         historyKey: "respiration" as const,
       },
       {
         key: "ecgMappedmV" as const,
-        path: "Sensor_data/ADB232/ecgMappedmV",
+        path: FIREBASE_PATHS.ecgMappedmV,
         historyKey: "ecg" as const,
       },
       {
         key: "ecgAdc" as const,
-        path: "Sensor_data/ADB232/ecgAdc",
+        path: FIREBASE_PATHS.ecgAdc,
         historyKey: "ecg" as const,
       },
       {
         key: "fsrAU" as const,
-        path: "Sensor_data/FSR/fsrAU",
+        path: FIREBASE_PATHS.fsrAU,
         historyKey: "pressure" as const,
       },
       {
         key: "micLevel" as const,
-        path: "Sensor_data/INMP441/micLevel",
+        path: FIREBASE_PATHS.micLevel,
         historyKey: "mic" as const,
       },
       {
         key: "onLine" as const,
-        path: "Sensor_data/TMP117/onLine",
+        path: FIREBASE_PATHS.onLine,
       },
       {
         key: "ecgLeadsOff" as const,
-        path: "Sensor_data/ADB232/ecgLeadsOff",
+        path: FIREBASE_PATHS.ecgLeadsOff,
       },
     ];
 

@@ -108,7 +108,7 @@ const chartConfig = {
   mic: { label: "Mic Level", color: "hsl(var(--accent-warm))" },
 };
 
-const LOADING_DELAY_MS = 1300;
+const SPLASH_SCREEN_DURATION_MS = 1300;
 const MIC_BAR_COUNT = 8;
 const MIC_BAR_BASE_HEIGHT = 20;
 const MIC_BAR_MIN_INTENSITY = 0.15;
@@ -116,7 +116,19 @@ const MIC_BAR_SCALE = 60;
 const MIC_BAR_INDEX_OFFSET = 2;
 const MIC_BAR_INDEX_DIVISOR = 10;
 
+const SPO2_LOW_THRESHOLD = 95;
+const FEVER_TEMP_THRESHOLD = 37.5;
+const HEART_RATE_HIGH_THRESHOLD = 120;
+const HEART_RATE_LOW_THRESHOLD = 55;
+const SENSOR_OFFLINE_VALUE = 0;
+
 const clampValue = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const calculateMicBarHeight = (index: number, intensity: number) =>
+  MIC_BAR_BASE_HEIGHT +
+  Math.max(MIC_BAR_MIN_INTENSITY, intensity) *
+    MIC_BAR_SCALE *
+    ((index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR);
 
 const Landing = () => {
   const { sensorData, history, lastUpdated, ecgValue } = useRealtimeSensors();
@@ -127,7 +139,7 @@ const Landing = () => {
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), LOADING_DELAY_MS);
+    const timer = setTimeout(() => setIsLoading(false), SPLASH_SCREEN_DURATION_MS);
     return () => clearTimeout(timer);
   }, []);
 
@@ -169,19 +181,28 @@ const Landing = () => {
 
   const alerts = useMemo(() => {
     const items: { title: string; description: string }[] = [];
-    if (sensorData.maxSpO2 !== null && sensorData.maxSpO2 < 95) {
-      items.push({ title: "Low Oxygen Alert", description: "SpO2 below 95% threshold." });
+    if (sensorData.maxSpO2 !== null && sensorData.maxSpO2 < SPO2_LOW_THRESHOLD) {
+      items.push({ title: "Low Oxygen Alert", description: `SpO2 below ${SPO2_LOW_THRESHOLD}% threshold.` });
     }
-    if (sensorData.tempC !== null && sensorData.tempC > 37.5) {
-      items.push({ title: "Fever Alert", description: "Temperature above 37.5°C." });
+    if (sensorData.tempC !== null && sensorData.tempC > FEVER_TEMP_THRESHOLD) {
+      items.push({
+        title: "Fever Alert",
+        description: `Temperature above ${FEVER_TEMP_THRESHOLD.toFixed(1)}°C.`,
+      });
     }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm > 120) {
-      items.push({ title: "High Heart Rate", description: "Maternal heart rate above 120 BPM." });
+    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm > HEART_RATE_HIGH_THRESHOLD) {
+      items.push({
+        title: "High Heart Rate",
+        description: `Maternal heart rate above ${HEART_RATE_HIGH_THRESHOLD} BPM.`,
+      });
     }
-    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm < 55) {
-      items.push({ title: "Low Heart Rate", description: "Maternal heart rate below 55 BPM." });
+    if (sensorData.maxHrBpm !== null && sensorData.maxHrBpm < HEART_RATE_LOW_THRESHOLD) {
+      items.push({
+        title: "Low Heart Rate",
+        description: `Maternal heart rate below ${HEART_RATE_LOW_THRESHOLD} BPM.`,
+      });
     }
-    if (sensorData.onLine !== null && Number(sensorData.onLine) === 0) {
+    if (sensorData.onLine !== null && Number(sensorData.onLine) === SENSOR_OFFLINE_VALUE) {
       items.push({ title: "Sensor Offline", description: "No signal detected from the belt." });
     }
     return items;
@@ -704,12 +725,7 @@ const Landing = () => {
                       key={index}
                       className="flex-1 rounded-full bg-primary/20"
                       style={{
-                        height: `${
-                          MIC_BAR_BASE_HEIGHT +
-                          Math.max(MIC_BAR_MIN_INTENSITY, micIntensity) *
-                            MIC_BAR_SCALE *
-                            ((index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR)
-                        }%`,
+                        height: `${calculateMicBarHeight(index, micIntensity)}%`,
                       }}
                     />
                   ))}
