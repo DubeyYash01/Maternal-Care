@@ -31,7 +31,7 @@ type SensorHistory = {
   mic: HistoryEntry[];
 };
 
-const MAX_POINTS = 20;
+const HISTORY_POINTS = 20;
 
 const formatTime = () =>
   new Date().toLocaleTimeString("en-US", {
@@ -50,7 +50,7 @@ const toNumber = (value: unknown) => {
 const appendHistory = (entries: HistoryEntry[], value: number | null) => {
   if (value === null) return entries;
   const next = [...entries, { time: formatTime(), value }];
-  return next.slice(-MAX_POINTS);
+  return next.slice(-HISTORY_POINTS);
 };
 
 export const useRealtimeSensors = () => {

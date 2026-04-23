@@ -108,6 +108,14 @@ const chartConfig = {
   mic: { label: "Mic Level", color: "hsl(var(--accent-warm))" },
 };
 
+const LOADING_DELAY_MS = 1300;
+const MIC_BAR_COUNT = 8;
+const MIC_BAR_BASE_HEIGHT = 20;
+const MIC_BAR_MIN_INTENSITY = 0.15;
+const MIC_BAR_SCALE = 60;
+const MIC_BAR_INDEX_OFFSET = 2;
+const MIC_BAR_INDEX_DIVISOR = 10;
+
 const clampValue = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 const Landing = () => {
@@ -119,7 +127,7 @@ const Landing = () => {
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1300);
+    const timer = setTimeout(() => setIsLoading(false), LOADING_DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
 
@@ -691,12 +699,17 @@ const Landing = () => {
               <CardContent className="space-y-4">
                 <div className="text-3xl font-semibold">{micLevel || "--"} dB</div>
                 <div className="flex items-end gap-2 h-20">
-                  {Array.from({ length: 8 }).map((_, index) => (
+                  {Array.from({ length: MIC_BAR_COUNT }).map((_, index) => (
                     <div
                       key={index}
                       className="flex-1 rounded-full bg-primary/20"
                       style={{
-                        height: `${20 + Math.max(0.15, micIntensity) * 60 * ((index + 2) / 10)}%`,
+                        height: `${
+                          MIC_BAR_BASE_HEIGHT +
+                          Math.max(MIC_BAR_MIN_INTENSITY, micIntensity) *
+                            MIC_BAR_SCALE *
+                            ((index + MIC_BAR_INDEX_OFFSET) / MIC_BAR_INDEX_DIVISOR)
+                        }%`,
                       }}
                     />
                   ))}
