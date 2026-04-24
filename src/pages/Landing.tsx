@@ -57,6 +57,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Navigation } from "@/components/Navigation";
+import { AIInsightPanel } from "@/components/AIInsightPanel";
 import { useRealtimeSensors } from "@/hooks/useRealtimeSensors";
 
 // =============================================================
@@ -1092,6 +1093,21 @@ const Landing = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+
+          {/* AI Health Intelligence */}
+          <div className="mt-6">
+            <AIInsightPanel
+              vitals={{
+                heartRate: sensorData.maxHrBpm,
+                spo2: sensorData.maxSpO2,
+                temperature: sensorData.tempC,
+                respiration: sensorData.respBpm,
+                movement: sensorData.fsrAU,
+                online: sensorData.onLine,
+              }}
+              lastUpdated={lastUpdated}
+            />
           </div>
         </div>
       </section>

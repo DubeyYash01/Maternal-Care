@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
+import { apiPlugin } from "./server/api-plugin";
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -11,8 +12,13 @@ export default defineConfig(({ mode }) => ({
     port: 5000,
     allowedHosts: true,
   },
+  preview: {
+    host: "0.0.0.0",
+    port: 5000,
+    allowedHosts: true,
+  },
 
-  plugins: [react()],
+  plugins: [react(), apiPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

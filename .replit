@@ -35,9 +35,10 @@ localPort = 5000
 externalPort = 80
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 publicDir = "dist"
+run = ["npm", "run", "preview"]
 
 [userenv]
 
@@ -50,3 +51,4 @@ VITE_FIREBASE_STORAGE_BUCKET = "pregnancy-belt-fb490.firebasestorage.app"
 VITE_FIREBASE_MESSAGING_SENDER_ID = "621588747978"
 VITE_FIREBASE_APP_ID = "1:621588747978:web:ffe72b0614bdeb82aa0633"
 VITE_FIREBASE_MEASUREMENT_ID = "G-8PLZE53MH4"
+GEMINI_API_KEY = "AIzaSyA47M3vHC-hPmOKwjwGWNax3R630c-7umA"

@@ -1,0 +1,305 @@
+IMPORTANT: Work ONLY on the existing Maternal Care project already in this Replit workspace.
+
+Do NOT create a new project.
+Do NOT replace the current website.
+Do NOT remove existing Firebase realtime sync.
+
+My Gemini API key is already added in Replit Secrets as:
+
+GEMINI_API_KEY
+
+Use it properly and efficiently.
+
+==================================================
+CRITICAL REQUIREMENT
+==================================================
+
+The website already receives REAL LIVE SENSOR VALUES directly from Firebase.
+
+These live values are already updating on the website in realtime.
+
+Your AI system must use ONLY those REAL CURRENT VALUES as input.
+
+Do NOT use:
+- dummy values
+- static values
+- sample values
+- hardcoded values
+- random generated values
+- fake ranges
+
+Use current sensor data only.
+
+==================================================
+LIVE INPUT SOURCE
+==================================================
+
+Use existing realtime synced values already present in project such as:
+
+- maxHrBpm          = current live heart rate
+- maxSpO2           = current live oxygen %
+- tempC             = current live body temperature
+- respBpm           = current live respiration
+- fsrAU             = movement / pressure
+- micLevel          = audio intensity if useful
+- onLine            = sensor online status
+- ecgMappedmV       = ECG if available
+
+Read directly from current state already being shown on website.
+
+==================================================
+MAIN GOAL
+==================================================
+
+Create an advanced AI Health Intelligence system.
+
+Whenever live sensor values update:
+
+Firebase -> Website -> AI analysis -> output shown on dashboard
+
+Realtime intelligent pipeline.
+
+==================================================
+NO RANDOM RISK SCORE RULE
+==================================================
+
+Risk score must NOT be random.
+
+Risk score must be logically derived from live values.
+
+Use Gemini intelligently + deterministic rules.
+
+==================================================
+MEDICALLY SENSIBLE BASE RANGES
+==================================================
+
+Use these reasonable monitoring ranges unless project-specific calibration exists:
+
+Heart Rate:
+60-100 normal
+101-120 elevated
+>120 high concern
+<55 low concern
+
+SpO2:
+97-100 ideal
+95-96 watch
+<95 concern
+<92 urgent
+
+Temperature (C):
+36.1-37.2 normal
+37.3-37.9 elevated
+>=38 fever concern
+
+Respiration:
+12-20 normal
+21-24 elevated
+>24 concern
+<10 concern
+
+Sensor Offline:
+Immediate warning
+
+These ranges must influence scoring.
+
+==================================================
+AI DECISION ENGINE
+==================================================
+
+Build hybrid system:
+
+1. Local deterministic scoring engine
+2. Gemini explanation engine
+
+Example:
+
+risk = 0
+
+if HR > 100 add 15
+if HR > 120 add 25
+if HR < 55 add 25
+
+if SpO2 < 96 add 20
+if SpO2 < 95 add 35
+if SpO2 < 92 add 50
+
+if temp > 37.3 add 15
+if temp >= 38 add 30
+
+if resp > 20 add 15
+if resp > 24 add 25
+
+if sensor offline add 50
+
+Clamp final score between 0 and 100.
+
+==================================================
+USE GEMINI API EFFICIENTLY
+==================================================
+
+Gemini should NOT calculate random scores.
+
+Gemini should receive:
+
+{
+ heartRate,
+ spo2,
+ temperature,
+ respiration,
+ movement,
+ riskScore,
+ status
+}
+
+Gemini should generate ONLY:
+
+1. Short explanation
+2. Recommendation
+3. Trend comment if needed
+
+Keep concise.
+
+==================================================
+WHEN TO CALL GEMINI
+==================================================
+
+Call Gemini only:
+
+1. User clicks Analyze
+OR
+2. Every 60 seconds
+OR
+3. Risk score changes significantly
+OR
+4. Status changes Normal -> Warning -> Critical
+
+Do NOT call every second.
+
+==================================================
+AI OUTPUT SECTION
+==================================================
+
+Create premium dashboard panel:
+
+--------------------------------
+1. Risk Score Meter
+--------------------------------
+0-100 animated gauge
+
+--------------------------------
+2. Risk Status
+--------------------------------
+Low
+Moderate
+High
+Critical
+
+--------------------------------
+3. AI Summary
+--------------------------------
+
+Examples:
+
+"Live vitals mostly stable. Slight heart rate elevation detected."
+
+"Oxygen level below preferred range. Closer monitoring advised."
+
+--------------------------------
+4. Recommendation
+--------------------------------
+
+Examples:
+
+- Continue routine monitoring
+- Recheck sensor placement
+- Hydrate and rest
+- Seek medical guidance if persistent
+
+--------------------------------
+5. Last Analysis Time
+--------------------------------
+
+Show timestamp.
+
+==================================================
+VERY IMPORTANT REALTIME BEHAVIOR
+==================================================
+
+When sensor values change live:
+
+If values remain stable:
+No unnecessary Gemini calls.
+
+If values worsen:
+Recalculate score immediately.
+
+If threshold crossed:
+Trigger fresh Gemini insight.
+
+==================================================
+NO FAKE PREDICTIONS
+==================================================
+
+Never output made-up predictions.
+
+Only derive outputs from live incoming sensor data.
+
+==================================================
+BACKEND SECURITY
+==================================================
+
+Use backend route:
+
+/api/analyze
+
+Read GEMINI_API_KEY server-side only.
+
+Never expose key to frontend.
+
+==================================================
+FAILSAFE MODE
+==================================================
+
+If Gemini API fails:
+
+Still show deterministic score + local summary.
+
+UI must continue working.
+
+==================================================
+UI QUALITY
+==================================================
+
+Need premium modern healthcare UI:
+
+- elegant cards
+- clean spacing
+- soft gradients
+- responsive
+- smooth animation
+- loading shimmer
+- professional look
+
+==================================================
+FINAL TEST AFTER BUILD
+==================================================
+
+Verify:
+
+1. Existing Firebase realtime sync still works
+2. Live values are used as AI input
+3. No dummy values anywhere
+4. Score changes logically with sensor changes
+5. Gemini explanations appear correctly
+6. UI looks premium
+
+==================================================
+END GOAL
+==================================================
+
+Open website reaction:
+
+"Real live sensor data is powering intelligent AI analysis."
+
+Build this now properly.
