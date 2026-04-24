@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Activity,
   AlertTriangle,
   Brain,
   CheckCircle2,
+  Droplets,
+  Heart,
   Loader2,
   RefreshCw,
-  Sparkles,
-  TrendingUp,
   ShieldCheck,
+  Signal,
+  Sparkles,
+  Thermometer,
+  TrendingUp,
+  Wifi,
+  WifiOff,
+  Wind,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,14 +30,23 @@ type Vitals = {
   respiration: number | null;
   movement: number | null;
   online: number | null;
+  movementHistory?: number[];
 };
 
-type RiskLevel = "Low" | "Moderate" | "High" | "Critical";
+type RiskLevel = "Excellent" | "Stable" | "Monitor Closely" | "High Risk" | "Critical";
+
+type RiskFactor = {
+  metric: string;
+  value: string;
+  band: string;
+  impact: number;
+};
 
 type AnalyzeResponse = {
   score: number;
   level: RiskLevel;
-  factors: string[];
+  factors: RiskFactor[];
+  combinations: string[];
   signalQuality: "good" | "partial" | "offline";
   insight: {
     summary: string;
@@ -42,26 +59,36 @@ type AnalyzeResponse = {
 };
 
 const POLL_INTERVAL_MS = 60_000;
-const SIGNIFICANT_DELTA = 15;
+const SIGNIFICANT_DELTA = 12;
 
 const isPresent = (v: number | null) => typeof v === "number" && !Number.isNaN(v) && v !== 0;
 
-const levelStyle: Record<RiskLevel, { ring: string; chip: string; from: string; to: string; icon: typeof CheckCircle2 }> = {
-  Low: {
+const levelStyle: Record<
+  RiskLevel,
+  { ring: string; chip: string; from: string; to: string; icon: typeof CheckCircle2 }
+> = {
+  Excellent: {
     ring: "stroke-emerald-500",
     chip: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
     from: "from-emerald-400",
     to: "to-emerald-500",
     icon: CheckCircle2,
   },
-  Moderate: {
+  Stable: {
+    ring: "stroke-teal-500",
+    chip: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+    from: "from-teal-400",
+    to: "to-teal-500",
+    icon: ShieldCheck,
+  },
+  "Monitor Closely": {
     ring: "stroke-amber-500",
     chip: "bg-amber-500/10 text-amber-600 border-amber-500/20",
     from: "from-amber-400",
     to: "to-amber-500",
-    icon: ShieldCheck,
+    icon: Activity,
   },
-  High: {
+  "High Risk": {
     ring: "stroke-orange-500",
     chip: "bg-orange-500/10 text-orange-600 border-orange-500/20",
     from: "from-orange-400",
@@ -76,6 +103,8 @@ const levelStyle: Record<RiskLevel, { ring: string; chip: string; from: string; 
     icon: AlertTriangle,
   },
 };
+
+// ---------------- Sub-components ----------------
 
 const RiskGauge = ({ score, level }: { score: number; level: RiskLevel }) => {
   const radius = 70;
@@ -134,6 +163,34 @@ const Shimmer = () => (
   </div>
 );
 
+const LiveInputCell = ({
+  icon: Icon,
+  label,
+  value,
+  unit,
+}: {
+  icon: typeof Heart;
+  label: string;
+  value: string;
+  unit?: string;
+}) => (
+  <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white px-2.5 py-2">
+    <Icon className="h-3.5 w-3.5 text-primary" />
+    <div className="min-w-0 flex-1">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="truncate text-sm font-semibold">
+        {value}
+        {unit && <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">{unit}</span>}
+      </p>
+    </div>
+  </div>
+);
+
+const fmt = (v: number | null, digits = 0) =>
+  isPresent(v) ? (digits ? v!.toFixed(digits) : Math.round(v!).toString()) : "—";
+
+// ---------------- Main panel ----------------
+
 interface Props {
   vitals: Vitals;
   lastUpdated: Date | null;
@@ -153,7 +210,8 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
       isPresent(vitals.heartRate) ||
       isPresent(vitals.spo2) ||
       isPresent(vitals.temperature) ||
-      isPresent(vitals.respiration),
+      isPresent(vitals.respiration) ||
+      vitals.online === 0,
     [vitals],
   );
 
@@ -170,7 +228,7 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
         body: JSON.stringify(vitals),
       });
       if (!res.ok) {
-        throw new Error(`Analyze failed (${res.status})`);
+        throw new Error(`Analysis failed (${res.status})`);
       }
       const json = (await res.json()) as AnalyzeResponse;
       setData(json);
@@ -184,7 +242,7 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
     }
   }, [vitals]);
 
-  // Initial analysis once we have any vital
+  // Initial analysis when vitals first appear
   useEffect(() => {
     if (!data && !loading && !error && hasAnyVital) {
       runAnalyze();
@@ -192,29 +250,27 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAnyVital]);
 
-  // Poll every 60 seconds while we have vitals
+  // Poll every 60 seconds
   useEffect(() => {
     if (!hasAnyVital) return;
-    const id = setInterval(() => {
-      runAnalyze();
-    }, POLL_INTERVAL_MS);
+    const id = setInterval(() => runAnalyze(), POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [hasAnyVital, runAnalyze]);
 
-  // Reactive trigger: significant local change triggers immediate refresh
+  // Reactive trigger on significant change
   useEffect(() => {
     if (!data || !hasAnyVital) return;
     const localScore = quickLocalScore(vitals);
     const lastScore = lastScoreRef.current ?? data.score;
     const delta = Math.abs(localScore.score - lastScore);
     const levelChanged = localScore.level !== (lastLevelRef.current ?? data.level);
-    const cooled = Date.now() - lastCallAtRef.current > 6_000; // throttle to avoid spam
+    const cooled = Date.now() - lastCallAtRef.current > 6_000;
     if (cooled && (delta >= SIGNIFICANT_DELTA || levelChanged)) {
       runAnalyze();
     }
   }, [vitals, data, hasAnyVital, runAnalyze]);
 
-  const level = data?.level ?? "Low";
+  const level: RiskLevel = data?.level ?? "Excellent";
   const score = data?.score ?? 0;
   const style = levelStyle[level];
   const Icon = style.icon;
@@ -227,6 +283,15 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
       })
     : "—";
 
+  const factorBars = useMemo(() => {
+    if (!data) return [];
+    return data.factors
+      .slice()
+      .sort((a, b) => b.impact - a.impact)
+      .slice(0, 5)
+      .map((f) => ({ ...f, pct: Math.min(100, (f.impact / 35) * 100) }));
+  }, [data]);
+
   return (
     <Card className="overflow-hidden rounded-3xl border-white/70 bg-white shadow-soft">
       <CardHeader className="flex-row items-start justify-between space-y-0 gap-4">
@@ -236,10 +301,10 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
           </Badge>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Brain className="h-4 w-4 text-secondary" />
-            Live Risk Analysis
+            Live Wellness Risk Analysis
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Hybrid clinical engine + Gemini explanations from your real-time belt signals.
+            Weighted clinical engine + Gemini explanations from real-time belt signals.
           </p>
         </div>
         <Button
@@ -258,141 +323,278 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
         </Button>
       </CardHeader>
 
-      <CardContent className="grid gap-6 lg:grid-cols-[auto_1fr]">
-        {/* Gauge + level */}
-        <div className="flex flex-col items-center gap-3">
-          <RiskGauge score={score} level={level} />
-          <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${style.chip}`}>
-            <Icon className="h-3.5 w-3.5" />
-            {level} Risk
+      <CardContent className="space-y-6">
+        {/* Live inputs mini panel */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Live Inputs to Engine
+            </p>
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              {vitals.online === 1 ? (
+                <>
+                  <Wifi className="h-3 w-3 text-emerald-500" /> Sensor online
+                </>
+              ) : vitals.online === 0 ? (
+                <>
+                  <WifiOff className="h-3 w-3 text-rose-500" /> Sensor offline
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-3 w-3 text-muted-foreground" /> Awaiting
+                </>
+              )}
+            </span>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Signal: <span className="font-medium text-foreground">{data?.signalQuality ?? (hasAnyVital ? "good" : "awaiting")}</span>
-          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            <LiveInputCell icon={Heart} label="HR" value={fmt(vitals.heartRate)} unit="bpm" />
+            <LiveInputCell icon={Droplets} label="SpO₂" value={fmt(vitals.spo2)} unit="%" />
+            <LiveInputCell icon={Thermometer} label="Temp" value={fmt(vitals.temperature, 1)} unit="°C" />
+            <LiveInputCell icon={Wind} label="Resp" value={fmt(vitals.respiration)} unit="bpm" />
+            <LiveInputCell icon={Signal} label="Pressure" value={fmt(vitals.movement)} unit="AU" />
+          </div>
         </div>
 
-        {/* Insight body */}
-        <div className="space-y-4">
-          {!hasAnyVital ? (
-            <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Awaiting live sensor signals from the belt. Insights will appear once values stream in.
+        <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
+          {/* Gauge + level */}
+          <div className="flex flex-col items-center gap-3">
+            <RiskGauge score={score} level={level} />
+            <div
+              className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${style.chip}`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {level}
             </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              {loading && !data ? (
-                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <Shimmer />
-                </motion.div>
-              ) : data ? (
-                <motion.div
-                  key={data.analyzedAt}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-4"
-                >
-                  {/* Summary */}
-                  <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-white to-muted/30 p-4">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI Summary</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-foreground">{data.insight.summary}</p>
-                  </div>
-
-                  {/* Recommendation */}
-                  <div className={`rounded-2xl border p-4 ${style.chip}`}>
-                    <p className="text-xs font-medium uppercase tracking-wider opacity-80">Recommendation</p>
-                    <p className="mt-1.5 text-sm leading-relaxed">{data.insight.recommendation}</p>
-                  </div>
-
-                  {/* Trend + factors */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-border/60 bg-white p-4">
-                      <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        <TrendingUp className="h-3.5 w-3.5" /> Trend
-                      </p>
-                      <p className="mt-1.5 text-sm text-foreground capitalize">{data.insight.trend}</p>
-                    </div>
-                    <div className="rounded-2xl border border-border/60 bg-white p-4">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Reasons</p>
-                      {data.factors.length === 0 ? (
-                        <p className="mt-1.5 text-sm text-emerald-600">No anomalies detected.</p>
-                      ) : (
-                        <ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">
-                          {data.factors.slice(0, 3).map((f, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br ${style.from} ${style.to}`} />
-                              {f}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Footer meta */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                    <span>
-                      Last analysis: <span className="font-medium text-foreground">{analyzedLabel}</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${data.insight.source === "gemini" ? "bg-secondary" : "bg-amber-500"}`} />
-                      {data.insight.source === "gemini" ? "Gemini insight" : "Local failsafe"}
-                      {data.insight.source === "local" && data.insight.reason ? ` (${data.insight.reason})` : ""}
-                    </span>
-                  </div>
-                </motion.div>
-              ) : (
-                <Shimmer />
-              )}
-            </AnimatePresence>
-          )}
-
-          {error && (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-600">
-              {error}
-            </div>
-          )}
-
-          {lastUpdated && (
             <p className="text-[11px] text-muted-foreground">
-              Last sensor update:{" "}
-              {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              Signal:{" "}
+              <span className="font-medium text-foreground">
+                {data?.signalQuality ?? (hasAnyVital ? "good" : "awaiting")}
+              </span>
             </p>
-          )}
+          </div>
+
+          {/* Insight body */}
+          <div className="space-y-4">
+            {!hasAnyVital ? (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                Awaiting live sensor signals from the belt. Insights will appear once values stream in.
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                {loading && !data ? (
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <Shimmer />
+                  </motion.div>
+                ) : data ? (
+                  <motion.div
+                    key={data.analyzedAt}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-4"
+                  >
+                    {/* Summary */}
+                    <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-white to-muted/30 p-4">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        AI Summary
+                      </p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-foreground">
+                        {data.insight.summary}
+                      </p>
+                    </div>
+
+                    {/* Recommendation */}
+                    <div className={`rounded-2xl border p-4 ${style.chip}`}>
+                      <p className="text-xs font-medium uppercase tracking-wider opacity-80">
+                        Recommendation
+                      </p>
+                      <p className="mt-1.5 text-sm leading-relaxed">{data.insight.recommendation}</p>
+                    </div>
+
+                    {/* Reason breakdown + Trend */}
+                    <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
+                      <div className="rounded-2xl border border-border/60 bg-white p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Reason Breakdown
+                        </p>
+                        {factorBars.length === 0 ? (
+                          <p className="mt-2 text-sm text-emerald-600">
+                            No anomalies — all weighted factors at baseline.
+                          </p>
+                        ) : (
+                          <div className="mt-3 space-y-2.5">
+                            {factorBars.map((f) => (
+                              <div key={f.metric}>
+                                <div className="flex items-center justify-between text-[11px]">
+                                  <span className="font-medium text-foreground">
+                                    {f.metric}{" "}
+                                    <span className="text-muted-foreground">({f.value} · {f.band})</span>
+                                  </span>
+                                  <span className="font-mono text-muted-foreground">+{f.impact}</span>
+                                </div>
+                                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                                  <motion.div
+                                    className={`h-full rounded-full bg-gradient-to-r ${style.from} ${style.to}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${f.pct}%` }}
+                                    transition={{ duration: 0.7, ease: "easeOut" }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {data.combinations.length > 0 && (
+                          <div className="mt-3 space-y-1 border-t border-border/60 pt-3">
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                              Combined Patterns
+                            </p>
+                            {data.combinations.map((c, i) => (
+                              <p key={i} className="text-[11px] text-muted-foreground">
+                                · {c}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border border-border/60 bg-white p-4">
+                          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            <TrendingUp className="h-3.5 w-3.5" /> Trend
+                          </p>
+                          <p className="mt-1.5 text-sm capitalize text-foreground">
+                            {data.insight.trend}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            Score Composition
+                          </p>
+                          <div className="mt-2 grid grid-cols-2 gap-y-1 text-[11px]">
+                            <span className="text-muted-foreground">Total</span>
+                            <span className="text-right font-semibold">{data.score} / 100</span>
+                            <span className="text-muted-foreground">Factors</span>
+                            <span className="text-right font-semibold">{data.factors.length}</span>
+                            <span className="text-muted-foreground">Combos</span>
+                            <span className="text-right font-semibold">{data.combinations.length}</span>
+                            <span className="text-muted-foreground">Signal</span>
+                            <span className="text-right font-semibold capitalize">{data.signalQuality}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer meta */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                      <span>
+                        Last analysis:{" "}
+                        <span className="font-medium text-foreground">{analyzedLabel}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            data.insight.source === "gemini" ? "bg-secondary" : "bg-amber-500"
+                          }`}
+                        />
+                        {data.insight.source === "gemini" ? "Gemini insight" : "Local failsafe"}
+                        {data.insight.source === "local" && data.insight.reason
+                          ? ` (${data.insight.reason})`
+                          : ""}
+                      </span>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <Shimmer />
+                )}
+              </AnimatePresence>
+            )}
+
+            {error && (
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-600">
+                {error}
+              </div>
+            )}
+
+            {lastUpdated && (
+              <p className="text-[11px] text-muted-foreground">
+                Last sensor update:{" "}
+                {lastUpdated.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </p>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 };
 
-// Lightweight client-side score (mirrors backend rules) used only to decide
-// whether to trigger a fresh server analysis. Server is the source of truth.
+// Mirrors backend rules; used only to decide whether to trigger a fresh server analysis.
 function quickLocalScore(v: Vitals): { score: number; level: RiskLevel } {
   let score = 0;
+  let hrHigh = false;
+  let hrLow = false;
+  let spo2Low = false;
+  let tempFever = false;
+  let respHigh = false;
+
   if (isPresent(v.heartRate)) {
-    if (v.heartRate! > 120) score += 25;
-    else if (v.heartRate! > 100) score += 15;
-    else if (v.heartRate! < 55) score += 25;
+    const hr = v.heartRate!;
+    if (hr > 130) score += 25;
+    else if (hr >= 111) score += 18;
+    else if (hr >= 101) score += 8;
+    else if (hr < 50) score += 25;
+    else if (hr < 60) score += 12;
+    if (hr > 100) hrHigh = true;
+    if (hr < 60) hrLow = true;
   }
   if (isPresent(v.spo2)) {
-    if (v.spo2! < 92) score += 50;
-    else if (v.spo2! < 95) score += 35;
-    else if (v.spo2! < 96) score += 20;
+    const o = v.spo2!;
+    if (o < 90) score += 35;
+    else if (o <= 92) score += 28;
+    else if (o <= 94) score += 18;
+    else if (o <= 96) score += 8;
+    if (o < 95) spo2Low = true;
   }
   if (isPresent(v.temperature)) {
-    if (v.temperature! >= 38) score += 30;
-    else if (v.temperature! > 37.3) score += 15;
+    const t = v.temperature!;
+    if (t >= 39) score += 20;
+    else if (t >= 38) score += 14;
+    else if (t >= 37.3) score += 6;
+    else if (t < 35.5) score += 18;
+    if (t >= 38) tempFever = true;
   }
   if (isPresent(v.respiration)) {
-    if (v.respiration! > 24) score += 25;
-    else if (v.respiration! > 20) score += 15;
-    else if (v.respiration! < 10) score += 25;
+    const r = v.respiration!;
+    if (r > 30) score += 15;
+    else if (r >= 25) score += 11;
+    else if (r >= 21) score += 6;
+    else if (r < 10) score += 12;
+    if (r > 20) respHigh = true;
   }
-  if (v.online === 0) score += 50;
+  if (v.online === 0) score += 30;
+
+  if (spo2Low && hrHigh) score += 5;
+  if (tempFever && hrHigh) score += 5;
+  if (spo2Low && respHigh) score += 5;
+  if (v.online === 0 && (hrHigh || hrLow || spo2Low || tempFever || respHigh)) score += 10;
+
   score = Math.max(0, Math.min(100, Math.round(score)));
-  let level: RiskLevel = "Low";
-  if (score >= 70) level = "Critical";
-  else if (score >= 45) level = "High";
-  else if (score >= 20) level = "Moderate";
+
+  let level: RiskLevel = "Excellent";
+  if (score >= 81) level = "Critical";
+  else if (score >= 61) level = "High Risk";
+  else if (score >= 41) level = "Monitor Closely";
+  else if (score >= 21) level = "Stable";
+
+  if (v.online === 0 && (level === "Excellent" || level === "Stable")) {
+    level = "Monitor Closely";
+  }
   return { score, level };
 }

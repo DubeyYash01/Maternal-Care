@@ -10,8 +10,8 @@ Vite + React + TypeScript + shadcn/ui maternal-health monitoring SPA with a serv
 ## Architecture
 - **Frontend**: `src/` — Landing page (`src/pages/Landing.tsx`) is the premium showcase with hero, dashboard, AI panel, etc. Realtime sensor values come from Firebase via `src/hooks/useRealtimeSensors.ts`.
 - **Server middleware**: `server/` — A small Vite plugin (`server/api-plugin.ts`) mounts a `POST /api/analyze` handler in both `vite dev` and `vite preview`, so no separate Express server is needed.
-  - `server/risk.ts` — deterministic clinical risk scoring (heart rate, SpO₂, temperature, respiration, sensor offline) with thresholds and reasons.
-  - `server/analyze.ts` — receives live vitals, computes the deterministic risk, then asks Gemini (`gemini-2.5-flash` via REST, with `thinkingConfig: { thinkingBudget: 0 }` for fast structured JSON) for short summary/recommendation/trend. Falls back to a local summary if Gemini fails or `GEMINI_API_KEY` is absent.
+  - `server/risk.ts` — **professional weighted clinical engine**. Per-metric impacts (HR ≤25, SpO₂ ≤35, Temp ≤20, Resp ≤15, Offline 30, Movement ≤10) with banded thresholds matching standard adult wellness ranges. Multi-parameter combination bonuses (Low SpO₂+High HR, Fever+High HR, Low SpO₂+High Resp, Offline+abnormal). Movement intelligence uses recent FSR history variance/spikes. Status labels: Excellent / Stable / Monitor Closely / High Risk / Critical. Offline floors level to "Monitor Closely".
+  - `server/analyze.ts` — receives live vitals + movement history, computes the deterministic risk, then asks Gemini (`gemini-2.5-flash` via REST, with `thinkingConfig: { thinkingBudget: 0 }` for fast structured JSON) for short wellness-style summary/recommendation/trend. Never re-scores. Falls back to a local summary if Gemini fails or `GEMINI_API_KEY` is absent.
 
 ## Secrets
 - `GEMINI_API_KEY` is read **server-side only** by `server/analyze.ts`. It is never exposed to the browser.

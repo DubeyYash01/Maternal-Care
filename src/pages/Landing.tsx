@@ -1105,6 +1105,7 @@ const Landing = () => {
                 respiration: sensorData.respBpm,
                 movement: sensorData.fsrAU,
                 online: sensorData.onLine,
+                movementHistory: history.pressure.map((e) => e.value),
               }}
               lastUpdated={lastUpdated}
             />

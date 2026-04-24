@@ -1,0 +1,296 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project in this Replit workspace.
+
+Do NOT create a new project.
+Do NOT rebuild UI from scratch.
+Do NOT break current Firebase realtime syncing.
+Do NOT remove existing dashboard.
+
+We need to UPGRADE and CORRECT the AI Health Intelligence system.
+
+==================================================
+CORE PROBLEM TO SOLVE
+==================================================
+
+Current AI prediction logic appears incomplete or reacting to limited parameters.
+
+Need a PROFESSIONAL industry-style health scoring engine using ALL live sensor inputs.
+
+Prediction ranges must NOT be random.
+
+They must be based on standardized, clinically recognized adult wellness monitoring ranges suitable for general health screening / remote monitoring demos.
+
+This is for a smart maternal monitoring belt project.
+
+==================================================
+CRITICAL DATA SOURCE RULE
+==================================================
+
+Use ONLY real live Firebase values already syncing on website.
+
+No fake values.
+No demo values.
+No hardcoded samples.
+No placeholders.
+
+Use actual current sensor inputs:
+
+maxHrBpm   = Heart Rate
+maxSpO2    = Oxygen Saturation
+tempC      = Body Temperature
+respBpm    = Respiration Rate
+fsrAU      = Pressure / movement
+onLine     = Sensor Online status
+
+==================================================
+ENTERPRISE / INDUSTRY STANDARD RISK MODEL
+==================================================
+
+Use a professional weighted scoring engine.
+
+--------------------------------------------------
+1. HEART RATE (BPM)
+--------------------------------------------------
+
+60-100 = normal
+101-110 = mild elevated
+111-130 = high
+>130 = critical
+50-59 = low concern
+<50 = critical low
+
+--------------------------------------------------
+2. SpO2 (%)
+--------------------------------------------------
+
+97-100 = optimal
+95-96 = monitor
+93-94 = concerning
+90-92 = high concern
+<90 = critical
+
+--------------------------------------------------
+3. BODY TEMPERATURE (°C)
+--------------------------------------------------
+
+36.1-37.2 = normal
+37.3-37.9 = elevated
+38.0-38.9 = fever concern
+>=39 = critical fever
+<35.5 = hypothermia concern
+
+--------------------------------------------------
+4. RESPIRATION RATE
+--------------------------------------------------
+
+12-20 = normal
+21-24 = elevated
+25-30 = concerning
+>30 = critical
+<10 = concerning low
+
+--------------------------------------------------
+5. SENSOR STATUS
+--------------------------------------------------
+
+offline = immediate warning
+
+--------------------------------------------------
+6. PRESSURE / MOVEMENT (FSR)
+--------------------------------------------------
+
+Use intelligently.
+
+Examples:
+- sustained zero values for long period = no movement note
+- sudden spikes = movement event
+- irregular repeated spikes = discomfort flag
+
+Do NOT over-score pressure unless abnormal pattern detected.
+
+==================================================
+RISK SCORE ENGINE (0 TO 100)
+==================================================
+
+Use weighted logic.
+
+Heart Rate max impact: 25
+SpO2 max impact: 35
+Temperature max impact: 20
+Respiration max impact: 15
+Sensor offline max impact: 30
+Movement anomaly max impact: 10
+
+Clamp final score between 0 and 100.
+
+==================================================
+STATUS LABELS
+==================================================
+
+0-20   = Excellent
+21-40  = Stable
+41-60  = Monitor Closely
+61-80  = High Risk
+81-100 = Critical
+
+==================================================
+MULTI-PARAMETER INTELLIGENCE
+==================================================
+
+If multiple moderate abnormalities occur together, increase score.
+
+Examples:
+
+Low SpO2 + High HR = additional concern
+Fever + High HR = stronger concern
+Low SpO2 + High Resp = respiratory concern
+Offline sensor + abnormal vitals = urgent
+
+==================================================
+NO SINGLE-PARAMETER BUG
+==================================================
+
+Current issue seems one metric dominates.
+
+Fix so ALL parameters affect prediction properly.
+
+Changing any live Firebase metric must update score logically.
+
+==================================================
+REALTIME BEHAVIOR
+==================================================
+
+Whenever Firebase updates:
+
+1. Recalculate score immediately
+2. Update UI
+3. If major change, request Gemini summary
+4. If minor change, no need for Gemini call
+
+==================================================
+GEMINI API USAGE
+==================================================
+
+Use my existing GEMINI_API_KEY from Replit secrets.
+
+Use Gemini only for:
+
+1. Short clinical-style explanation
+2. Recommendation
+3. Trend commentary
+
+Gemini should NOT invent random score.
+
+Score must come from deterministic engine.
+
+Gemini receives:
+
+{
+ hr,
+ spo2,
+ temp,
+ resp,
+ movement,
+ riskScore,
+ level
+}
+
+Returns concise text only.
+
+==================================================
+BACKEND SECURITY
+==================================================
+
+Use backend route:
+
+/api/analyze
+
+Never expose key frontend-side.
+
+==================================================
+UI PANEL UPGRADE
+==================================================
+
+Keep current design but improve professionalism.
+
+Show:
+
+1. Risk Meter
+2. Status Badge
+3. Reason Breakdown
+4. AI Summary
+5. Recommendation
+6. Last Updated
+7. Live Inputs Mini Panel
+
+==================================================
+LIVE INPUT DEBUG PANEL
+==================================================
+
+Temporarily show:
+
+HR: __
+SpO2: __
+Temp: __
+Resp: __
+Pressure: __
+Online: __
+
+This helps verify actual values are reaching engine.
+
+==================================================
+TEST SCENARIOS (MUST PASS)
+==================================================
+
+Scenario A:
+HR 78
+SpO2 99
+Temp 36.8
+Resp 16
+
+Expected:
+Excellent / Stable
+
+Scenario B:
+HR 118
+SpO2 94
+Temp 37.8
+Resp 23
+
+Expected:
+Monitor Closely / High Risk zone
+
+Scenario C:
+HR 135
+SpO2 88
+Temp 39.1
+Resp 32
+
+Expected:
+Critical
+
+Scenario D:
+Sensor offline
+
+Expected:
+Immediate warning
+
+==================================================
+IMPORTANT PROJECT CONTEXT
+==================================================
+
+This is a maternal care belt demo.
+
+Use general wellness monitoring logic.
+Do NOT claim medical diagnosis.
+Use wording:
+monitoring insight / wellness alert / recommend consultation.
+
+==================================================
+FINAL GOAL
+==================================================
+
+When judges see it:
+
+"This system uses live IoT vitals with a professional standardized AI risk engine."
+
+Build now professionally and verify all metrics work.

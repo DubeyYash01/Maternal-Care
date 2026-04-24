@@ -40,10 +40,16 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-const buildPrompt = (vitals: Vitals, risk: ReturnType<typeof computeRisk>) => `
-You are an AI maternal health assistant. The risk score is already computed by a deterministic clinical engine — do NOT re-score.
+const numArray = (v: unknown): number[] | undefined => {
+  if (!Array.isArray(v)) return undefined;
+  const arr = v.map((x) => num(x)).filter((x): x is number => x !== null);
+  return arr.length ? arr : undefined;
+};
 
-Live vitals (only consider real values; ignore null):
+const buildPrompt = (vitals: Vitals, risk: ReturnType<typeof computeRisk>) => `
+You are an AI maternal wellness monitoring assistant. The deterministic clinical engine has already computed the risk score — do NOT re-score, and do NOT make medical diagnoses. Use general wellness wording (monitoring insight, wellness alert, recommend consultation).
+
+Live signals (ignore null values):
 - Heart rate: ${vitals.heartRate ?? "n/a"} BPM
 - SpO2: ${vitals.spo2 ?? "n/a"} %
 - Temperature: ${vitals.temperature ?? "n/a"} °C
@@ -51,14 +57,21 @@ Live vitals (only consider real values; ignore null):
 - Movement (FSR): ${vitals.movement ?? "n/a"} AU
 - Sensor online: ${vitals.online === 1 ? "yes" : vitals.online === 0 ? "no" : "n/a"}
 
-Risk score: ${risk.score}/100 (${risk.level})
-Reasons: ${risk.factors.join(" ") || "none"}
+Risk score: ${risk.score}/100 (level: ${risk.level})
+Contributing factors: ${
+  risk.factors.length === 0
+    ? "none"
+    : risk.factors
+        .map((f) => `${f.metric} ${f.value} (${f.band}, +${f.impact})`)
+        .join("; ")
+}
+Multi-parameter notes: ${risk.combinations.join(" ") || "none"}
 
 Reply ONLY as a strict JSON object (no markdown, no code fences) with these keys:
 {
-  "summary": "1 short sentence describing current state (under 22 words).",
-  "recommendation": "1 short, calm, actionable suggestion (under 18 words). Never give medical diagnosis.",
-  "trend": "1 short comment about pattern (under 14 words). Use 'stable' if nothing notable."
+  "summary": "1 short wellness-style sentence describing current state (under 24 words).",
+  "recommendation": "1 short calm actionable suggestion (under 20 words). Use phrases like 'continue routine monitoring', 'recommend consultation', 'recheck sensor placement'. Never diagnose.",
+  "trend": "1 short pattern comment (under 14 words). Use 'stable' if nothing notable."
 }
 `.trim();
 
@@ -142,6 +155,7 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     respiration: num(body.respiration),
     movement: num(body.movement),
     online: num(body.online),
+    movementHistory: numArray(body.movementHistory),
   };
 
   const risk = computeRisk(vitals);
@@ -153,13 +167,13 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     ? {
         summary: ai.parsed.summary?.trim() || local.summary,
         recommendation: ai.parsed.recommendation?.trim() || local.recommendation,
-        trend: ai.parsed.trend?.trim() || "stable",
+        trend: ai.parsed.trend?.trim() || local.trend,
         source: "gemini" as const,
       }
     : {
         summary: local.summary,
         recommendation: local.recommendation,
-        trend: "n/a",
+        trend: local.trend,
         source: "local" as const,
         reason: ai.reason,
       };
@@ -168,6 +182,7 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     score: risk.score,
     level: risk.level,
     factors: risk.factors,
+    combinations: risk.combinations,
     signalQuality: risk.signalQuality,
     insight,
     analyzedAt: new Date().toISOString(),
