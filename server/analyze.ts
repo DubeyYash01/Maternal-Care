@@ -4,7 +4,7 @@ import { computeRisk, localSummary, type Vitals } from "./risk";
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const GEMINI_TIMEOUT_MS = 8000;
+const GEMINI_TIMEOUT_MS = 9000;
 
 const sendJson = (res: ServerResponse, status: number, body: unknown) => {
   res.statusCode = status;
@@ -18,7 +18,7 @@ const readJsonBody = (req: IncomingMessage): Promise<Record<string, unknown>> =>
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
-      if (data.length > 16_000) {
+      if (data.length > 32_000) {
         reject(new Error("Payload too large"));
         req.destroy();
       }
@@ -46,36 +46,49 @@ const numArray = (v: unknown): number[] | undefined => {
   return arr.length ? arr : undefined;
 };
 
-const buildPrompt = (vitals: Vitals, risk: ReturnType<typeof computeRisk>) => `
-You are an AI maternal wellness monitoring assistant. The deterministic clinical engine has already computed the risk score — do NOT re-score, and do NOT make medical diagnoses. Use general wellness wording (monitoring insight, wellness alert, recommend consultation).
+type GeminiInsight = {
+  summary?: string;
+  recommendations?: string[];
+  report?: string;
+  severity?: string;
+  combinedFindings?: string[];
+  trend?: string;
+};
 
-Live signals (ignore null values):
+const buildPrompt = (vitals: Vitals, risk: ReturnType<typeof computeRisk>) => `
+You are a maternal wellness monitoring assistant. A deterministic clinical engine has already computed the risk score and breakdown — do NOT re-score, and do NOT make medical diagnoses. Always use safe wellness wording (monitoring insight, wellness alert, recommend consultation, recheck sensor placement, hydrate and rest, repeat reading in 5 minutes, immediate attention advised if symptoms present).
+
+Live signals:
 - Heart rate: ${vitals.heartRate ?? "n/a"} BPM
 - SpO2: ${vitals.spo2 ?? "n/a"} %
 - Temperature: ${vitals.temperature ?? "n/a"} °C
 - Respiration: ${vitals.respiration ?? "n/a"} bpm
 - Movement (FSR): ${vitals.movement ?? "n/a"} AU
+- ECG (mV): ${vitals.ecgValue ?? "n/a"}
+- ECG-derived HR: ${vitals.ecgHrBpm ?? "n/a"} BPM
+- Mic / acoustic level: ${vitals.micLevel ?? "n/a"}
 - Sensor online: ${vitals.online === 1 ? "yes" : vitals.online === 0 ? "no" : "n/a"}
+- ECG leads off: ${vitals.ecgLeadsOff === 1 ? "yes" : "no"}
 
-Risk score: ${risk.score}/100 (level: ${risk.level})
-Contributing factors: ${
-  risk.factors.length === 0
-    ? "none"
-    : risk.factors
-        .map((f) => `${f.metric} ${f.value} (${f.band}, +${f.impact})`)
-        .join("; ")
-}
-Multi-parameter notes: ${risk.combinations.join(" ") || "none"}
+Engine result:
+- Risk score: ${risk.score}/100
+- Severity level: ${risk.level}
+- Single-parameter alerts: ${risk.singleAlerts.join(" | ") || "none"}
+- Multi-parameter combined findings: ${risk.combinations.join(" | ") || "none"}
+- Sensor reliability: online=${risk.reliability.sensorOnline}, leadsOff=${risk.reliability.ecgLeadsOff}, missing=${risk.reliability.missingSignals.join(",") || "none"}
 
-Reply ONLY as a strict JSON object (no markdown, no code fences) with these keys:
+Reply with ONLY a strict JSON object (no markdown, no code fences) using exactly these keys:
 {
-  "summary": "1 short wellness-style sentence describing current state (under 24 words).",
-  "recommendation": "1 short calm actionable suggestion (under 20 words). Use phrases like 'continue routine monitoring', 'recommend consultation', 'recheck sensor placement'. Never diagnose.",
-  "trend": "1 short pattern comment (under 14 words). Use 'stable' if nothing notable."
+  "summary": "2-3 short professional wellness sentences (under 60 words total) synthesising the current state.",
+  "recommendations": ["3-5 short bullet recommendations, each under 14 words, safe wellness wording, no diagnosis"],
+  "report": "A 4-6 line mini health report referencing concrete numbers and the severity level. Plain text with line breaks.",
+  "severity": "${risk.level}",
+  "combinedFindings": ["0-4 short notes describing combined patterns observed (echo or refine the engine's combined findings)"],
+  "trend": "Short pattern comment under 12 words (use 'stable' if nothing notable)."
 }
 `.trim();
 
-const extractJson = (text: string): { summary?: string; recommendation?: string; trend?: string } | null => {
+const extractJson = (text: string): GeminiInsight | null => {
   const cleaned = text.replace(/```json|```/gi, "").trim();
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
@@ -103,7 +116,7 @@ const callGemini = async (vitals: Vitals, risk: ReturnType<typeof computeRisk>) 
         generationConfig: {
           temperature: 0.4,
           topP: 0.9,
-          maxOutputTokens: 512,
+          maxOutputTokens: 900,
           responseMimeType: "application/json",
           thinkingConfig: { thinkingBudget: 0 },
         },
@@ -134,6 +147,14 @@ const callGemini = async (vitals: Vitals, risk: ReturnType<typeof computeRisk>) 
   }
 };
 
+const cleanStrArray = (v: unknown, max = 6): string[] => {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
+    .filter(Boolean)
+    .slice(0, max);
+};
+
 export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) => {
   if (req.method !== "POST") {
     sendJson(res, 405, { error: "Method not allowed" });
@@ -155,7 +176,12 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     respiration: num(body.respiration),
     movement: num(body.movement),
     online: num(body.online),
+    ecgValue: num(body.ecgValue),
+    ecgHrBpm: num(body.ecgHrBpm),
+    ecgLeadsOff: num(body.ecgLeadsOff),
+    micLevel: num(body.micLevel),
     movementHistory: numArray(body.movementHistory),
+    ecgHistory: numArray(body.ecgHistory),
   };
 
   const risk = computeRisk(vitals);
@@ -166,13 +192,23 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
   const insight = ai.ok
     ? {
         summary: ai.parsed.summary?.trim() || local.summary,
-        recommendation: ai.parsed.recommendation?.trim() || local.recommendation,
+        recommendations: cleanStrArray(ai.parsed.recommendations, 6).length
+          ? cleanStrArray(ai.parsed.recommendations, 6)
+          : local.recommendations,
+        report: ai.parsed.report?.trim() || local.report,
+        severity: ai.parsed.severity?.trim() || risk.level,
+        combinedFindings: cleanStrArray(ai.parsed.combinedFindings, 6).length
+          ? cleanStrArray(ai.parsed.combinedFindings, 6)
+          : risk.combinations,
         trend: ai.parsed.trend?.trim() || local.trend,
         source: "gemini" as const,
       }
     : {
         summary: local.summary,
-        recommendation: local.recommendation,
+        recommendations: local.recommendations,
+        report: local.report,
+        severity: risk.level,
+        combinedFindings: risk.combinations,
         trend: local.trend,
         source: "local" as const,
         reason: ai.reason,
@@ -182,8 +218,10 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     score: risk.score,
     level: risk.level,
     factors: risk.factors,
+    singleAlerts: risk.singleAlerts,
     combinations: risk.combinations,
     signalQuality: risk.signalQuality,
+    reliability: risk.reliability,
     insight,
     analyzedAt: new Date().toISOString(),
   });

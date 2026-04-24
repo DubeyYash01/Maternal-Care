@@ -1105,7 +1105,11 @@ const Landing = () => {
                 respiration: sensorData.respBpm,
                 movement: sensorData.fsrAU,
                 online: sensorData.onLine,
+                ecgValue: ecgValue,
+                ecgLeadsOff: sensorData.ecgLeadsOff,
+                micLevel: sensorData.micLevel,
                 movementHistory: history.pressure.map((e) => e.value),
+                ecgHistory: history.ecg.map((e) => e.value),
               }}
               lastUpdated={lastUpdated}
             />

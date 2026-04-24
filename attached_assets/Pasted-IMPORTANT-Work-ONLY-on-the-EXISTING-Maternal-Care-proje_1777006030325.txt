@@ -1,0 +1,421 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project already in this Replit workspace.
+
+Do NOT create a new project.
+Do NOT rebuild the site from scratch.
+Do NOT break current Firebase realtime syncing.
+Do NOT remove existing dashboard sections.
+
+Use and upgrade the CURRENT project only.
+
+My Gemini API key is already stored in Replit Secrets as:
+
+GEMINI_API_KEY
+
+Use it properly.
+
+==================================================
+MASTER GOAL
+==================================================
+
+Transform the current AI Health Intelligence section into an ADVANCED REAL-TIME CLINICAL DECISION SUPPORT + REPORTING SYSTEM.
+
+Current live sensor data is already syncing from Firebase to website.
+
+Use those REAL LIVE VALUES only.
+
+NO dummy values.
+NO static values.
+NO hardcoded samples.
+
+==================================================
+REAL LIVE SENSOR INPUTS
+==================================================
+
+Use current Firebase data:
+
+MAX30105:
+- maxHrBpm      = Heart Rate
+- maxSpO2       = Oxygen %
+
+TMP117:
+- tempC         = Temperature
+
+INMP441:
+- respBpm       = Respiration Rate
+- micLevel      = Acoustic / fetal sound level
+
+ADB232:
+- ecgMappedmV   = ECG waveform value
+- ecgHrBpm      = ECG derived HR if valid
+- ecgLeadsOff   = lead status
+
+FSR:
+- fsrAU         = pressure / movement
+
+TMP117:
+- onLine        = sensor online status
+
+==================================================
+CRITICAL INTELLIGENCE RULE
+==================================================
+
+Prediction must NOT depend only on one high value.
+
+Need TWO-LAYER ANALYSIS:
+
+--------------------------------------------------
+LAYER 1: SINGLE PARAMETER ALERTS
+--------------------------------------------------
+
+If any one metric abnormal:
+Highlight clearly.
+
+Examples:
+
+Low SpO2
+High HR
+Fever
+Low respiration
+Sensor offline
+No movement
+Lead disconnected
+
+--------------------------------------------------
+LAYER 2: COMBINED MULTI-PARAMETER RISK ENGINE
+--------------------------------------------------
+
+Use combinations to create smarter prediction.
+
+Examples:
+
+1. Low SpO2 + High Respiration
+= Respiratory stress concern
+
+2. Fever + High HR
+= Physiological stress concern
+
+3. Low SpO2 + High HR + Abnormal ECG
+= Critical cardiopulmonary concern
+
+4. Low movement + abnormal vitals
+= Wellness concern
+
+5. Sensor offline + missing signals
+= Device reliability warning
+
+6. Repeated unstable readings across metrics
+= Escalated risk
+
+This combined logic is VERY IMPORTANT.
+
+==================================================
+STANDARDIZED INDUSTRY RANGE MODEL
+==================================================
+
+Use professional wellness ranges:
+
+HEART RATE:
+60-100 normal
+101-110 mild high
+111-130 high
+>130 critical
+50-59 low
+<50 critical
+
+SpO2:
+97-100 optimal
+95-96 monitor
+93-94 concerning
+90-92 high concern
+<90 critical
+
+TEMP:
+36.1-37.2 normal
+37.3-37.9 elevated
+38-38.9 fever
+>=39 critical
+<35.5 low temp concern
+
+RESP:
+12-20 normal
+21-24 elevated
+25-30 concern
+>30 critical
+<10 low concern
+
+==================================================
+RISK ENGINE (0-100)
+==================================================
+
+Build weighted scoring.
+
+Single parameter abnormality adds score.
+
+Then combination abnormalities add BONUS score.
+
+Example:
+
+Low SpO2 only = moderate
+
+Low SpO2 + Fever + High HR = severe
+
+This is mandatory.
+
+==================================================
+GEMINI API MUST BE MAIN AI ENGINE
+==================================================
+
+Use GEMINI_API_KEY from secrets.
+
+Gemini must receive LIVE values + local risk calculations.
+
+Gemini should produce:
+
+1. Final clinical-style interpretation
+2. Combined risk reasoning
+3. Recommendation
+4. AI prescription / action advice
+5. Mini health report
+6. Trend comment
+
+==================================================
+VERY IMPORTANT: AI PRESCRIPTION MEANING
+==================================================
+
+Do NOT claim real doctor prescription.
+
+Instead provide safe wellness recommendations like:
+
+- Continue monitoring
+- Recheck sensor placement
+- Hydrate and rest
+- Repeat reading in 5 mins
+- Seek medical consultation if persistent
+- Immediate attention advised if symptoms present
+
+Use safe language.
+
+==================================================
+NEW UI PANELS TO BUILD
+==================================================
+
+==================================================
+1. ADVANCED RISK SCORE PANEL
+==================================================
+
+Show:
+
+Score 0-100
+Level:
+Excellent
+Stable
+Monitor
+High Risk
+Critical
+
+Animated gauge.
+
+==================================================
+2. SINGLE ALERTS PANEL
+==================================================
+
+Show each abnormal metric separately.
+
+Examples:
+
+SpO2 low
+Temp elevated
+Resp high
+
+==================================================
+3. COMBINED CONDITIONS PANEL
+==================================================
+
+Examples:
+
+Respiratory stress pattern detected
+Stress + fever pattern
+Multi-vital instability detected
+
+==================================================
+4. GEMINI AI SUMMARY PANEL
+==================================================
+
+2-3 lines concise professional summary.
+
+==================================================
+5. AI RECOMMENDATION PANEL
+==================================================
+
+Bullet points.
+
+==================================================
+6. SMART REPORT PANEL
+==================================================
+
+Generate downloadable / visible report:
+
+Timestamp
+Current vitals
+Risk score
+Alerts
+Combined observations
+Recommendations
+
+==================================================
+7. SENSOR RELIABILITY PANEL
+==================================================
+
+Show:
+
+Online / Offline
+Lead disconnected
+Missing signals
+
+==================================================
+ECG + MIC + RESP FIXES (MANDATORY)
+==================================================
+
+Fix existing broken sensors.
+
+ECG:
+Use ecgMappedmV
+Show waveform chart.
+
+If ecgLeadsOff = 1
+show lead disconnected.
+
+RESP:
+Use respBpm.
+
+MIC:
+Use micLevel.
+
+Create sound activity card.
+
+==================================================
+ZERO VALUE BUG FIX
+==================================================
+
+0 is valid value.
+
+Do NOT treat 0 as missing.
+
+Use null / undefined checks only.
+
+==================================================
+REALTIME BEHAVIOR
+==================================================
+
+When Firebase changes:
+
+1. Update dashboard instantly
+2. Recalculate local score instantly
+3. If major changes, call Gemini
+4. Refresh report
+
+Do NOT spam API.
+
+==================================================
+CALL GEMINI ONLY WHEN
+==================================================
+
+1. Analyze button clicked
+2. Every 60 sec max
+3. Status changed
+4. Risk score changed significantly
+5. Multi-parameter abnormality detected
+
+==================================================
+BACKEND SECURITY
+==================================================
+
+Create secure route:
+
+/api/analyze
+
+Use GEMINI_API_KEY server-side only.
+
+Never expose frontend.
+
+==================================================
+PROMPT TO GEMINI SHOULD INCLUDE
+==================================================
+
+{
+ hr,
+ spo2,
+ temp,
+ resp,
+ ecg,
+ movement,
+ micLevel,
+ online,
+ riskScore,
+ singleAlerts,
+ combinedAlerts
+}
+
+Ask Gemini to return JSON:
+
+{
+ summary,
+ recommendations[],
+ report,
+ severity,
+ combinedFindings[]
+}
+
+==================================================
+UI QUALITY
+==================================================
+
+Premium modern healthcare design.
+
+Need:
+
+- clean cards
+- spacing
+- soft shadows
+- glass effects
+- animations
+- responsive
+- professional charts
+
+==================================================
+FINAL TEST SCENARIOS
+==================================================
+
+Scenario A:
+HR 78
+SpO2 99
+Temp 36.8
+Resp 16
+
+= Stable
+
+Scenario B:
+HR 118
+SpO2 94
+Temp 37.8
+Resp 24
+
+= Monitor / combined stress
+
+Scenario C:
+HR 132
+SpO2 88
+Temp 39
+Resp 31
+
+= Critical multi-system concern
+
+==================================================
+FINAL GOAL
+==================================================
+
+When someone sees project:
+
+"This uses real-time IoT sensor fusion + Gemini AI healthcare intelligence."
+
+Build now professionally.
