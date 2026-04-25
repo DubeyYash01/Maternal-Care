@@ -1,17 +1,17 @@
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
-  Environment,
+  ContactShadows,
   Float,
+  Html,
   Line,
   RoundedBox,
   Sparkles,
-  Text,
 } from "@react-three/drei";
 import * as THREE from "three";
 
 const BELT_RADIUS = 1.7;
-const BELT_HEIGHT = 0.85;
+const BELT_HEIGHT = 0.95;
 
 const HeartShape = ({ scale = 1 }: { scale?: number }) => {
   const geometry = useMemo(() => {
@@ -40,10 +40,10 @@ const HeartShape = ({ scale = 1 }: { scale?: number }) => {
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    const pulse = 1 + Math.sin(t * 2.4) * 0.08;
+    const pulse = 1 + Math.sin(t * 2.4) * 0.1;
     ref.current.scale.setScalar(scale * pulse);
     const mat = ref.current.material as THREE.MeshStandardMaterial;
-    mat.emissiveIntensity = 1.6 + Math.sin(t * 2.4) * 0.6;
+    mat.emissiveIntensity = 1.8 + Math.sin(t * 2.4) * 0.7;
   });
 
   return (
@@ -51,7 +51,7 @@ const HeartShape = ({ scale = 1 }: { scale?: number }) => {
       <meshStandardMaterial
         color="#ff6fa3"
         emissive="#ff4d8d"
-        emissiveIntensity={1.8}
+        emissiveIntensity={2}
         roughness={0.25}
         metalness={0.2}
       />
@@ -63,58 +63,76 @@ type LabelProps = {
   text: string;
   position: [number, number, number];
   color: string;
+  anchorPosition: [number, number, number];
 };
 
-const FloatingLabel = ({ text, position, color }: LabelProps) => {
-  const linePoints = useMemo(() => {
-    return [
-      new THREE.Vector3(position[0] * 0.55, position[1] * 0.55, position[2] * 0.55),
-      new THREE.Vector3(position[0], position[1], position[2]),
-    ];
-  }, [position]);
+const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) => {
+  const linePoints = useMemo(
+    () => [
+      new THREE.Vector3(...anchorPosition),
+      new THREE.Vector3(...position),
+    ],
+    [position, anchorPosition],
+  );
 
   return (
-    <Float speed={1.4} rotationIntensity={0} floatIntensity={0.35}>
-      <group position={position}>
-        {/* Pill background */}
-        <mesh>
-          <planeGeometry args={[0.95, 0.34]} />
-          <meshBasicMaterial color="#0b1227" transparent opacity={0.55} />
-        </mesh>
-        <mesh position={[0, 0, 0.001]}>
-          <ringGeometry args={[0.16, 0.18, 32]} />
-          <meshBasicMaterial color={color} transparent opacity={0.9} />
-        </mesh>
-        {/* LED dot */}
-        <mesh position={[-0.36, 0, 0.01]}>
-          <sphereGeometry args={[0.05, 16, 16]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.5} />
-        </mesh>
-        {/* Text */}
-        <Text
-          position={[0.05, 0, 0.01]}
-          fontSize={0.18}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          font="https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff"
-        >
-          {text}
-        </Text>
-      </group>
-      {/* Connecting line */}
+    <group>
       <Line
         points={linePoints}
         color={color}
-        lineWidth={1}
+        lineWidth={1.2}
         transparent
-        opacity={0.55}
+        opacity={0.6}
         dashed
         dashScale={20}
-        dashSize={0.05}
-        gapSize={0.05}
+        dashSize={0.06}
+        gapSize={0.04}
       />
-    </Float>
+      <Float speed={1.4} rotationIntensity={0} floatIntensity={0.3}>
+        <group position={position}>
+          <Html
+            center
+            distanceFactor={6}
+            style={{
+              pointerEvents: "none",
+              userSelect: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "5px 10px",
+                borderRadius: 999,
+                background: "rgba(11, 18, 39, 0.72)",
+                border: `1px solid ${color}66`,
+                color: "#fff",
+                fontFamily:
+                  "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1,
+                boxShadow: `0 0 14px ${color}55`,
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: color,
+                  boxShadow: `0 0 10px ${color}`,
+                }}
+              />
+              {text}
+            </div>
+          </Html>
+        </group>
+      </Float>
+    </group>
   );
 };
 
@@ -127,38 +145,40 @@ const SensorPod = () => {
     ledRef.current.children.forEach((child, i) => {
       const mesh = child as THREE.Mesh;
       const mat = mesh.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 1.5 + Math.sin(t * 3 + i * 0.8) * 1.5;
+      mat.emissiveIntensity = 1.6 + Math.sin(t * 3 + i * 0.8) * 1.5;
     });
   });
 
   return (
     <group position={[0, 0, BELT_RADIUS - 0.05]}>
-      {/* Pod body */}
-      <RoundedBox args={[1.05, 0.78, 0.32]} radius={0.16} smoothness={6}>
+      {/* Pod outer body - cyan glossy */}
+      <RoundedBox args={[1.15, 0.85, 0.34]} radius={0.17} smoothness={6}>
         <meshPhysicalMaterial
-          color="#f8fafc"
-          roughness={0.2}
-          metalness={0.55}
+          color="#0e7490"
+          roughness={0.15}
+          metalness={0.7}
           clearcoat={1}
           clearcoatRoughness={0.05}
-          envMapIntensity={1}
+          emissive="#0891b2"
+          emissiveIntensity={0.35}
+          envMapIntensity={1.2}
         />
       </RoundedBox>
 
-      {/* Pod inner bezel ring */}
-      <mesh position={[0, 0, 0.165]}>
-        <torusGeometry args={[0.32, 0.018, 16, 64]} />
-        <meshStandardMaterial color="#9ca3af" metalness={0.9} roughness={0.2} />
+      {/* Bezel ring around dome */}
+      <mesh position={[0, 0, 0.18]}>
+        <torusGeometry args={[0.36, 0.022, 16, 64]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.95} roughness={0.15} />
       </mesh>
 
       {/* Translucent glass dome */}
-      <mesh position={[0, 0, 0.18]}>
-        <sphereGeometry args={[0.3, 48, 48, 0, Math.PI * 2, 0, Math.PI / 2]} />
+      <mesh position={[0, 0, 0.19]}>
+        <sphereGeometry args={[0.34, 48, 48, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshPhysicalMaterial
-          color="#ffffff"
+          color="#a5f3fc"
           transparent
-          opacity={0.25}
-          transmission={1}
+          opacity={0.35}
+          transmission={0.9}
           roughness={0}
           thickness={0.3}
           clearcoat={1}
@@ -166,16 +186,22 @@ const SensorPod = () => {
         />
       </mesh>
 
+      {/* Inner glow disc behind heart */}
+      <mesh position={[0, 0, 0.1]}>
+        <circleGeometry args={[0.3, 48]} />
+        <meshBasicMaterial color="#67e8f9" transparent opacity={0.55} />
+      </mesh>
+
       {/* Heart core */}
-      <group position={[0, 0, 0.2]} scale={0.32}>
+      <group position={[0, 0, 0.22]} scale={0.34}>
         <HeartShape />
       </group>
 
       {/* Status LEDs row */}
-      <group ref={ledRef} position={[0, -0.28, 0.165]}>
-        {[-0.22, 0, 0.22].map((x, i) => (
+      <group ref={ledRef} position={[0, -0.32, 0.18]}>
+        {[-0.24, 0, 0.24].map((x, i) => (
           <mesh key={i} position={[x, 0, 0]}>
-            <sphereGeometry args={[0.035, 16, 16]} />
+            <sphereGeometry args={[0.04, 16, 16]} />
             <meshStandardMaterial
               color={i === 0 ? "#7DCBF4" : i === 1 ? "#F7C0D8" : "#a7f3d0"}
               emissive={i === 0 ? "#7DCBF4" : i === 1 ? "#F7C0D8" : "#a7f3d0"}
@@ -185,17 +211,11 @@ const SensorPod = () => {
         ))}
       </group>
 
-      {/* Brand text on pod */}
-      <Text
-        position={[0, 0.28, 0.165]}
-        fontSize={0.07}
-        color="#475569"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.1}
-      >
-        MATERNAL · CARE
-      </Text>
+      {/* Top brand bar */}
+      <mesh position={[0, 0.34, 0.18]}>
+        <boxGeometry args={[0.5, 0.03, 0.001]} />
+        <meshStandardMaterial color="#67e8f9" emissive="#67e8f9" emissiveIntensity={1.2} />
+      </mesh>
     </group>
   );
 };
@@ -206,101 +226,97 @@ const Belt = () => {
   useFrame((state) => {
     if (!beltRef.current) return;
     const t = state.clock.elapsedTime;
-    // Subtle breathing
     const breathe = 1 + Math.sin(t * 1.2) * 0.012;
     beltRef.current.scale.set(breathe, breathe, breathe);
   });
 
   return (
     <group ref={beltRef}>
-      {/* Outer fabric band */}
+      {/* Outer fabric band - soft blue / silver lavender */}
       <mesh>
         <cylinderGeometry
           args={[BELT_RADIUS, BELT_RADIUS, BELT_HEIGHT, 96, 1, true]}
         />
         <meshPhysicalMaterial
-          color="#f4f6fb"
-          roughness={0.85}
-          metalness={0.05}
+          color="#c7d2fe"
+          roughness={0.65}
+          metalness={0.25}
           sheen={1}
-          sheenColor={new THREE.Color("#cbd5e1")}
-          sheenRoughness={0.6}
+          sheenColor={new THREE.Color("#a5b4fc")}
+          sheenRoughness={0.5}
           side={THREE.DoubleSide}
-          clearcoat={0.2}
+          clearcoat={0.4}
+          clearcoatRoughness={0.3}
         />
       </mesh>
 
-      {/* Inner padded layer */}
+      {/* Inner padded layer (lavender) */}
       <mesh>
         <cylinderGeometry
           args={[BELT_RADIUS - 0.08, BELT_RADIUS - 0.08, BELT_HEIGHT - 0.05, 96, 1, true]}
         />
         <meshStandardMaterial
-          color="#dbe5f1"
+          color="#818cf8"
           roughness={1}
           metalness={0}
           side={THREE.DoubleSide}
+          emissive="#6366f1"
+          emissiveIntensity={0.1}
         />
       </mesh>
 
       {/* Top stitching */}
-      <mesh position={[0, BELT_HEIGHT / 2 - 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.005, 0.01, 8, 128]} />
-        <meshStandardMaterial color="#94a3b8" roughness={0.4} />
+      <mesh position={[0, BELT_HEIGHT / 2 - 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[BELT_RADIUS + 0.005, 0.012, 8, 128]} />
+        <meshStandardMaterial color="#475569" roughness={0.4} />
       </mesh>
 
       {/* Bottom stitching */}
-      <mesh position={[0, -BELT_HEIGHT / 2 + 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.005, 0.01, 8, 128]} />
-        <meshStandardMaterial color="#94a3b8" roughness={0.4} />
+      <mesh position={[0, -BELT_HEIGHT / 2 + 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[BELT_RADIUS + 0.005, 0.012, 8, 128]} />
+        <meshStandardMaterial color="#475569" roughness={0.4} />
       </mesh>
 
-      {/* Top trim accent (soft blue) */}
+      {/* Top trim accent (cyan) */}
       <mesh position={[0, BELT_HEIGHT / 2 - 0.005, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.012, 0.018, 12, 128]} />
+        <torusGeometry args={[BELT_RADIUS + 0.012, 0.022, 12, 128]} />
         <meshStandardMaterial
-          color="#7DCBF4"
-          emissive="#7DCBF4"
-          emissiveIntensity={0.45}
+          color="#67e8f9"
+          emissive="#67e8f9"
+          emissiveIntensity={0.7}
           roughness={0.4}
         />
       </mesh>
 
-      {/* Bottom trim accent (soft pink) */}
+      {/* Bottom trim accent (pink) */}
       <mesh position={[0, -BELT_HEIGHT / 2 + 0.005, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.012, 0.018, 12, 128]} />
+        <torusGeometry args={[BELT_RADIUS + 0.012, 0.022, 12, 128]} />
         <meshStandardMaterial
           color="#F7C0D8"
           emissive="#F7C0D8"
-          emissiveIntensity={0.45}
+          emissiveIntensity={0.7}
           roughness={0.4}
         />
       </mesh>
 
-      {/* Vertical seam decoration on side */}
-      {[Math.PI * 0.3, -Math.PI * 0.3].map((angle, i) => (
+      {/* Vertical seam decoration on sides */}
+      {[Math.PI * 0.32, -Math.PI * 0.32].map((angle, i) => (
         <mesh
           key={i}
           position={[
-            Math.sin(angle) * (BELT_RADIUS + 0.01),
+            Math.sin(angle) * (BELT_RADIUS + 0.012),
             0,
-            Math.cos(angle) * (BELT_RADIUS + 0.01),
+            Math.cos(angle) * (BELT_RADIUS + 0.012),
           ]}
           rotation={[0, angle, 0]}
         >
-          <boxGeometry args={[0.015, BELT_HEIGHT - 0.08, 0.02]} />
-          <meshStandardMaterial color="#94a3b8" roughness={0.5} />
+          <boxGeometry args={[0.018, BELT_HEIGHT - 0.1, 0.025]} />
+          <meshStandardMaterial color="#475569" roughness={0.5} />
         </mesh>
       ))}
 
       {/* Front sensor pod */}
       <SensorPod />
-
-      {/* Glow ring under belt */}
-      <mesh position={[0, -BELT_HEIGHT / 2 - 0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[BELT_RADIUS - 0.1, BELT_RADIUS + 0.4, 64]} />
-        <meshBasicMaterial color="#B8A2F4" transparent opacity={0.18} side={THREE.DoubleSide} />
-      </mesh>
     </group>
   );
 };
@@ -314,20 +330,20 @@ const Scene = () => {
     const mx = state.mouse.x;
     const my = state.mouse.y;
 
-    // Base 3/4 perspective + tiny rotation oscillation + parallax
-    const baseY = -0.35;
-    const baseX = -0.18;
-    const swayY = Math.sin(t * 0.5) * 0.08; // ±5° sway
-    const swayX = Math.sin(t * 0.7) * 0.04;
+    // 3/4 perspective base + slow continuous rotation + parallax
+    const baseY = -0.45;
+    const baseX = -0.12;
+    const slowRotate = t * 0.12; // continuous slow rotation
+    const swayX = Math.sin(t * 0.7) * 0.03;
 
     groupRef.current.rotation.y = THREE.MathUtils.lerp(
       groupRef.current.rotation.y,
-      baseY + swayY + mx * 0.18,
+      baseY + slowRotate * 0.3 + Math.sin(t * 0.5) * 0.08 + mx * 0.18,
       0.05,
     );
     groupRef.current.rotation.x = THREE.MathUtils.lerp(
       groupRef.current.rotation.x,
-      baseX + swayX - my * 0.1,
+      baseX + swayX - my * 0.08,
       0.05,
     );
     // Slow float up/down
@@ -335,47 +351,72 @@ const Scene = () => {
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} scale={1.6}>
       <Belt />
 
-      {/* Floating data labels with lines */}
-      <FloatingLabel text="ECG" position={[2.6, 1.1, 0.6]} color="#ff6fa3" />
-      <FloatingLabel text="SpO₂" position={[-2.7, 0.9, 0.4]} color="#7DCBF4" />
-      <FloatingLabel text="TEMP" position={[2.4, -0.9, 0.7]} color="#F7C0D8" />
-      <FloatingLabel text="AI SYNC" position={[-2.5, -1.0, 0.5]} color="#a7f3d0" />
+      {/* Floating labels with anchor lines into belt */}
+      <FloatingLabel
+        text="ECG"
+        position={[2.6, 1.0, 0.5]}
+        anchorPosition={[1.2, 0.3, 0.8]}
+        color="#ff6fa3"
+      />
+      <FloatingLabel
+        text="SpO₂"
+        position={[-2.7, 0.85, 0.4]}
+        anchorPosition={[-1.2, 0.3, 0.8]}
+        color="#7DCBF4"
+      />
+      <FloatingLabel
+        text="TEMP"
+        position={[2.5, -0.95, 0.6]}
+        anchorPosition={[1.2, -0.3, 0.8]}
+        color="#F7C0D8"
+      />
+      <FloatingLabel
+        text="AI SYNC"
+        position={[-2.6, -0.95, 0.5]}
+        anchorPosition={[-1.2, -0.3, 0.8]}
+        color="#a7f3d0"
+      />
 
-      <Sparkles count={60} scale={[6, 4, 6]} size={2.2} color="#B8A2F4" speed={0.35} opacity={0.7} />
+      <Sparkles
+        count={70}
+        scale={[6, 4, 6]}
+        size={2.4}
+        color="#B8A2F4"
+        speed={0.35}
+        opacity={0.7}
+      />
     </group>
   );
 };
 
 const PulseRings = () => {
-  const ring1 = useRef<THREE.Mesh>(null);
-  const ring2 = useRef<THREE.Mesh>(null);
-  const ring3 = useRef<THREE.Mesh>(null);
+  const refs = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)];
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    [ring1, ring2, ring3].forEach((r, i) => {
+    refs.forEach((r, i) => {
       if (!r.current) return;
       const phase = (t + i * 1.0) % 3;
       const s = 1 + (phase / 3) * 1.8;
       const o = 1 - phase / 3;
       r.current.scale.set(s, 1, s);
       const mat = r.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = o * 0.35;
+      mat.opacity = o * 0.4;
     });
   });
 
   return (
-    <group position={[0, -BELT_HEIGHT / 2 - 0.25, 0]}>
-      {[ring1, ring2, ring3].map((r, i) => (
+    <group position={[0, -1.5, 0]}>
+      {refs.map((r, i) => (
         <mesh key={i} ref={r} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[BELT_RADIUS + 0.05, BELT_RADIUS + 0.1, 80]} />
+          <ringGeometry args={[BELT_RADIUS + 0.05, BELT_RADIUS + 0.12, 80]} />
           <meshBasicMaterial
-            color="#B8A2F4"
+            color="#a78bfa"
             transparent
-            opacity={0.35}
+            opacity={0.4}
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -386,30 +427,42 @@ const PulseRings = () => {
 
 export const SmartBelt3D = () => {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[560px]">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 via-accent/30 to-secondary/30 blur-3xl" />
+    <div
+      className="relative z-10 mx-auto w-full overflow-visible"
+      style={{ height: "min(80vh, 600px)" }}
+    >
+      {/* Faint gradient halo backdrop for visibility */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 55%, rgba(167,139,250,0.28) 0%, rgba(125,203,244,0.18) 30%, rgba(247,192,216,0.12) 55%, rgba(255,255,255,0) 75%)",
+          filter: "blur(8px)",
+        }}
+      />
 
       <Canvas
-        camera={{ position: [0.6, 1.4, 5.5], fov: 38 }}
+        style={{ width: "100%", height: "100%" }}
+        camera={{ position: [0, 0, 6], fov: 45 }}
         dpr={[1, 1.8]}
         gl={{ antialias: true, alpha: true }}
-        shadows
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.55} />
-          <directionalLight
-            position={[5, 6, 5]}
-            intensity={1.6}
-            color="#ffffff"
-            castShadow
-          />
-          <directionalLight position={[-4, -2, -3]} intensity={0.7} color="#B8A2F4" />
-          <pointLight position={[0, 0.6, 3.5]} intensity={1.3} color="#F7C0D8" />
-          <spotLight position={[0, 4, 4]} intensity={0.8} angle={0.7} penumbra={0.5} color="#7DCBF4" />
-          <Environment preset="studio" />
+          <ambientLight intensity={1.4} />
+          <directionalLight position={[5, 5, 5]} intensity={2} color="#ffffff" />
+          <pointLight position={[-5, 3, 5]} intensity={1.5} color="#a5f3fc" />
+          <hemisphereLight intensity={1} groundColor="#1e293b" color="#ffffff" />
+          <spotLight position={[0, 4, 4]} intensity={0.9} angle={0.7} penumbra={0.5} color="#7DCBF4" />
           <Scene />
           <PulseRings />
+          <ContactShadows
+            position={[0, -1.7, 0]}
+            opacity={0.55}
+            scale={9}
+            blur={2.5}
+            far={4}
+            color="#1e1b4b"
+          />
         </Suspense>
       </Canvas>
     </div>
