@@ -4,7 +4,6 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TiltCard } from "@/components/TiltCard";
 import { AlertTimeline } from "@/components/AlertTimeline";
-import heroImage from "@assets/image_1777080058569.png";
 import {
   Activity,
   ArrowRight,
@@ -555,9 +554,13 @@ const Landing = () => {
                   scale: { duration: 1.0, delay: 0.1 },
                   y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
                 }}
-                className="relative mx-auto w-full max-w-[640px]"
+                className="relative mx-auto w-full max-w-[620px] px-4 sm:px-0"
+                style={{
+                  filter:
+                    "drop-shadow(0 30px 50px rgba(124,58,237,0.18)) drop-shadow(0 8px 24px rgba(125,203,244,0.18))",
+                }}
               >
-                {/* Soft pastel halo behind image */}
+                {/* Soft pastel halo behind product */}
                 <div
                   aria-hidden
                   className="pointer-events-none absolute inset-0 -z-10"
@@ -567,20 +570,13 @@ const Landing = () => {
                     filter: "blur(20px)",
                   }}
                 />
-                <motion.img
-                  src={heroImage}
-                  alt="Premium maternal care illustration"
-                  loading="eager"
-                  decoding="async"
-                  className="relative h-auto w-full select-none object-contain"
-                  style={{
-                    filter:
-                      "drop-shadow(0 30px 50px rgba(124,58,237,0.18)) drop-shadow(0 8px 24px rgba(125,203,244,0.18))",
-                  }}
+                <motion.div
                   animate={{ scale: [1, 1.015, 1] }}
                   transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-                  draggable={false}
-                />
+                  className="relative"
+                >
+                  <SmartBelt />
+                </motion.div>
               </motion.div>
               <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">

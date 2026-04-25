@@ -1,0 +1,105 @@
+URGENT FIX: Wrong image was used in hero section.
+
+You used the FULL webpage screenshot as hero image.
+
+That is incorrect.
+
+I only want the CROPPED DEVICE IMAGE (the clean right-side circular belt visual), not the whole page screenshot.
+
+==================================================
+TASK
+==================================================
+
+Replace current hero image immediately.
+
+Remove the full website screenshot from hero right side.
+
+Use ONLY the cropped uploaded image asset that contains:
+
+- circular smart belt visual
+- heart icon center
+- Live Sync badge
+- Secure badge
+- Smart AI badge
+
+Nothing else.
+
+==================================================
+DO NOT USE
+==================================================
+
+Do NOT use image containing:
+
+- webpage text
+- buttons
+- navbar
+- screenshot borders
+- Ask Canva toolbar
+- purple bottom line
+- whole homepage screenshot
+
+==================================================
+USE THIS ONLY
+==================================================
+
+Use the clean cropped product visual image I uploaded separately.
+
+(The circular device-only image.)
+
+==================================================
+LAYOUT
+==================================================
+
+Hero left side:
+Keep heading/text/buttons unchanged.
+
+Hero right side:
+Show only cropped product image.
+
+==================================================
+STYLING
+==================================================
+
+Right image should be:
+
+- width 480px to 620px desktop
+- object-fit contain
+- centered vertically
+- no border
+- no screenshot frame
+- transparent / blended edges if possible
+- soft glow shadow behind image
+
+==================================================
+ANIMATION
+==================================================
+
+Very subtle:
+
+- float slowly up/down
+- fade in on load
+- slight breathing scale
+
+==================================================
+RESPONSIVE
+==================================================
+
+Tablet:
+400px wide
+
+Mobile:
+move below heading
+
+==================================================
+FINAL RESULT
+==================================================
+
+Hero should look clean and premium.
+
+Only product visual on right side.
+
+No webpage screenshot visible.
+
+==================================================
+FIX NOW
+==================================================
