@@ -1,0 +1,173 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project hero section.
+
+Current 3D object does NOT look like a maternal smart belt.
+
+It looks abstract / random / floating ring.
+
+Need to replace hero 3D model with something clearly recognizable as a PREMIUM SMART WEARABLE PREGNANCY BELT.
+
+Do NOT break website.
+Do NOT touch Firebase or backend.
+Only fix hero visual model.
+
+==================================================
+MASTER GOAL
+==================================================
+
+When someone opens the website, they should instantly understand:
+
+"This is a smart pregnancy monitoring belt."
+
+==================================================
+REPLACE CURRENT MODEL WITH NEW 3D BELT
+==================================================
+
+Create a realistic stylized wearable maternity belt.
+
+Visual design:
+
+- soft ergonomic fabric belt
+- wide abdominal support band
+- curved flexible strap wrapping around waist
+- central smart sensor module at front
+- elegant premium medical material finish
+- white + soft silver + light blue accents
+- subtle glowing sensor LEDs
+
+Think:
+
+modern orthopedic maternity belt + wearable health device.
+
+==================================================
+BELT STRUCTURE
+==================================================
+
+The 3D model should clearly have:
+
+1. Main waist band
+- wide horizontal belt
+- soft rounded edges
+- wraps left and right
+
+2. Front smart hub
+- center device module
+- circular or oval sensor pod
+- glowing heart icon / pulse light
+
+3. Side straps
+- tapered fabric extensions
+
+4. underside soft padding
+
+==================================================
+POSE / ANGLE
+==================================================
+
+Show in 3/4 perspective angle.
+
+Slightly rotated.
+
+Not flat front.
+
+Need depth.
+
+==================================================
+ANIMATION
+==================================================
+
+Very subtle:
+
+- slow floating
+- slow rotation ±5 degrees only
+- breathing motion
+- glow pulse in center hub
+
+Do NOT spin aggressively.
+
+==================================================
+MATERIALS
+==================================================
+
+Use premium materials:
+
+- matte fabric texture for belt
+- glossy sensor pod
+- soft translucent medical glow
+- shadows for realism
+
+==================================================
+BACKGROUND SUPPORT
+==================================================
+
+Keep particles and glow background.
+
+But make belt main focus.
+
+==================================================
+INTERACTIVE EFFECT
+==================================================
+
+Mouse move:
+
+small parallax tilt only.
+
+==================================================
+IF NO CUSTOM MODEL AVAILABLE
+==================================================
+
+Build using geometry primitives:
+
+- curved cylinders
+- torus segments
+- rounded boxes
+- straps from extruded shapes
+
+Need believable belt silhouette.
+
+==================================================
+AVOID THESE MISTAKES
+==================================================
+
+Do NOT make:
+
+- UFO shape
+- random ring
+- floating disc
+- helmet
+- donut
+- abstract orb
+
+It must look wearable.
+
+==================================================
+EXTRA DETAIL
+==================================================
+
+Add tiny floating labels around belt:
+
+ECG
+SpO2
+Temp
+AI Sync
+
+Connected with subtle lines.
+
+==================================================
+RESPONSIVE
+==================================================
+
+Desktop = full 3D model
+
+Mobile = simplified static rendered version
+
+==================================================
+FINAL IMPRESSION
+==================================================
+
+Should look like a product prototype from Apple / futuristic medtech startup.
+
+==================================================
+BUILD NOW
+==================================================
+
+Replace current failed ring object with realistic smart maternal monitoring belt hero model.
