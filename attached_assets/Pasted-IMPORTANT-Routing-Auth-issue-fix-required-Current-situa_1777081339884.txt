@@ -1,0 +1,105 @@
+IMPORTANT: Routing/Auth issue fix required.
+
+Current situation:
+
+- New premium homepage exists.
+- But after Login / Signup user is redirected to OLD dashboard / old app UI.
+
+Need to unify whole project.
+
+==================================================
+TASK
+==================================================
+
+Remove old dashboard/auth flow routing.
+
+After successful login/signup redirect user to NEW premium dashboard only.
+
+==================================================
+FIX ROUTES
+==================================================
+
+Check all routes and old pages.
+
+Likely routes:
+
+/login
+/signup
+/dashboard
+/app
+/home
+
+Find old components still being used.
+
+==================================================
+NEW REQUIRED FLOW
+==================================================
+
+/ = premium homepage
+
+/login = modern login page matching current UI
+
+/signup = modern signup page matching current UI
+
+After auth success:
+
+redirect to:
+
+/dashboard
+
+But /dashboard must be NEW premium live dashboard (not old UI)
+
+==================================================
+REMOVE OLD UI
+==================================================
+
+Delete or disconnect:
+
+- old dashboard components
+- old auth screens
+- old layouts
+- old redirects
+
+==================================================
+KEEP FUNCTIONALITY
+==================================================
+
+Keep:
+
+- Firebase live data
+- AI health intelligence
+- alerts
+- report download
+- auth logic if working
+
+Only replace old pages with new styled pages.
+
+==================================================
+AUTH REDIRECT
+==================================================
+
+After login:
+
+navigate('/dashboard')
+
+No old route.
+
+==================================================
+DESIGN LOGIN/SIGNUP
+==================================================
+
+Use premium MaternalCare theme.
+
+Glassmorphism card.
+Blue-lavender gradient.
+Professional.
+
+==================================================
+FINAL RESULT
+==================================================
+
+Whole website should feel ONE single product.
+
+No old page should appear anywhere.
+
+Build now.

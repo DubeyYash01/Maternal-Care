@@ -247,7 +247,7 @@ const Questionnaire = () => {
                 </Card>
 
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => navigate("/mother-dashboard")}>
+                  <Button variant="outline" onClick={() => navigate("/dashboard")}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
                   </Button>

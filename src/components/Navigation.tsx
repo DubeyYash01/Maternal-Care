@@ -9,7 +9,7 @@ const navItems = [
   { name: "About", href: "#about" },
   { name: "Features", href: "#features" },
   { name: "How It Works", href: "#how-it-works" },
-  { name: "Live Dashboard", href: "#dashboard" },
+  { name: "Live Dashboard", href: "/dashboard" },
   { name: "Future", href: "#future" },
   { name: "Team", href: "#team" },
 ];
@@ -95,12 +95,11 @@ export const Navigation = () => {
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const active = isActive(item.href);
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="relative px-3 py-2 rounded-full text-sm transition-all"
-                >
+              const isAnchor = item.href.startsWith("#");
+              const href = isAnchor && !isLanding ? `/${item.href}` : item.href;
+              const linkClassName = "relative px-3 py-2 rounded-full text-sm transition-all";
+              const inner = (
+                <>
                   <span
                     className={`relative z-10 transition-colors ${
                       active ? "text-primary font-semibold" : "text-foreground/70 hover:text-foreground"
@@ -115,7 +114,16 @@ export const Navigation = () => {
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
+                </>
+              );
+              return isAnchor ? (
+                <a key={item.href} href={href} className={linkClassName}>
+                  {inner}
                 </a>
+              ) : (
+                <Link key={item.href} to={href} className={linkClassName}>
+                  {inner}
+                </Link>
               );
             })}
 
@@ -160,20 +168,34 @@ export const Navigation = () => {
               className="md:hidden overflow-hidden"
             >
               <div className="flex flex-col gap-1 py-3 border-t border-border/40">
-                {navItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className={`px-3 py-2.5 rounded-xl transition-all ${
-                      isActive(item.href)
-                        ? "bg-gradient-to-r from-primary/15 to-secondary/15 text-primary font-medium"
-                        : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </a>
-                ))}
+                {navItems.map((item) => {
+                  const isAnchor = item.href.startsWith("#");
+                  const href = isAnchor && !isLanding ? `/${item.href}` : item.href;
+                  const className = `px-3 py-2.5 rounded-xl transition-all ${
+                    isActive(item.href)
+                      ? "bg-gradient-to-r from-primary/15 to-secondary/15 text-primary font-medium"
+                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                  }`;
+                  return isAnchor ? (
+                    <a
+                      key={item.href}
+                      href={href}
+                      className={className}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.name}
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      to={href}
+                      className={className}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                })}
 
                 <Button
                   asChild
