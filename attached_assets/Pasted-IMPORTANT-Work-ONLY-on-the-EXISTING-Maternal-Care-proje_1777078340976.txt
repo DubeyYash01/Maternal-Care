@@ -1,0 +1,179 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project in this Replit workspace.
+
+Current system already has:
+
+- Firebase realtime sensor syncing
+- AI Health Intelligence
+- Risk scoring
+- Email alerts
+- Dashboard
+
+DO NOT break any existing working functionality.
+
+DO NOT create a new project.
+
+DO NOT touch backend logic unless required.
+
+ONLY upgrade frontend UI / UX into a PREMIUM 3D FUTURISTIC WEBSITE.
+
+==================================================
+TOP PRIORITY
+==================================================
+
+Preserve all existing features first.
+
+Then redesign visuals.
+
+If any package conflicts with current project, choose safer alternatives.
+
+==================================================
+TECH STACK
+==================================================
+
+Use:
+
+- Three.js or React Three Fiber
+- Framer Motion
+- GSAP
+- CSS transforms
+- Lightweight particle systems
+
+Use only if compatible with current project.
+
+==================================================
+RULE
+==================================================
+
+Do changes incrementally section by section.
+
+After each major section ensure project still runs.
+
+==================================================
+1. HERO SECTION
+==================================================
+
+Create cinematic premium hero.
+
+Right side:
+
+3D floating smart maternal belt device.
+
+If no model exists:
+create stylized wearable using geometry.
+
+Effects:
+
+- slow rotation
+- glow
+- mouse parallax
+- floating badges
+- heartbeat pulse rings
+- particles
+
+Left side:
+
+keep current text but animate elegantly.
+
+==================================================
+2. NAVBAR
+==================================================
+
+Glass sticky navbar.
+
+Blur on scroll.
+
+Smooth section highlighting.
+
+==================================================
+3. FEATURES SECTION
+==================================================
+
+Upgrade cards with:
+
+- hover lift
+- tilt effect
+- animated icons
+- glowing borders
+
+==================================================
+4. LIVE DASHBOARD
+==================================================
+
+Keep all Firebase data working.
+
+Enhance UI only:
+
+- animated counters
+- cleaner charts
+- premium cards
+- transitions
+
+Do NOT break sensor syncing.
+
+==================================================
+5. AI SECTION
+==================================================
+
+Keep current AI logic.
+
+Upgrade visuals:
+
+- holographic panel
+- animated risk gauge
+- typing effect summary
+- glowing borders
+
+==================================================
+6. ALERT SECTION
+==================================================
+
+Keep email alerts working.
+
+Create elegant alert history timeline.
+
+==================================================
+7. FUTURE SECTION
+==================================================
+
+Premium roadmap cards with hover animation.
+
+==================================================
+8. PERFORMANCE
+==================================================
+
+Must load fast.
+
+Use lazy loading.
+
+Disable heavy 3D on mobile.
+
+==================================================
+9. RESPONSIVE
+==================================================
+
+Perfect on mobile + desktop.
+
+==================================================
+10. FINAL CHECK
+==================================================
+
+After changes verify:
+
+- Firebase live values still update
+- AI Analyze works
+- Email alerts work
+- No console errors
+- No lag
+
+==================================================
+BUILD ORDER
+==================================================
+
+1 Hero
+2 Navbar
+3 Features
+4 Dashboard polish
+5 AI section
+6 Performance tuning
+
+Start now professionally.

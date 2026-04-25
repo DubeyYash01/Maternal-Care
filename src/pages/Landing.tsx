@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { TiltCard } from "@/components/TiltCard";
+import { AlertTimeline } from "@/components/AlertTimeline";
+import { SafeBelt3D } from "@/components/3d/SafeBelt3D";
 import {
   Activity,
   ArrowRight,
@@ -328,6 +332,7 @@ const SmartBelt = () => (
 
 const Landing = () => {
   const { sensorData, history, lastUpdated, ecgValue } = useRealtimeSensors();
+  const isMobile = useIsMobile();
 
   const [isLoading, setIsLoading] = useState(true);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -538,7 +543,7 @@ const Landing = () => {
               transition={{ duration: 1, delay: 0.1 }}
               className="relative"
             >
-              <SmartBelt />
+              {isMobile ? <SmartBelt /> : <SafeBelt3D fallback={<SmartBelt />} />}
               <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" /> FDA-inspired safety
@@ -690,17 +695,26 @@ const Landing = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.05 }}
                 >
-                  <Card className="group h-full rounded-3xl border-white bg-white p-2 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-glow">
-                    <CardHeader className="space-y-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary transition-transform duration-500 group-hover:scale-110">
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <CardTitle className="text-lg font-semibold">{f.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm leading-relaxed text-muted-foreground">{f.text}</p>
-                    </CardContent>
-                  </Card>
+                  <TiltCard className="group h-full rounded-3xl">
+                    <Card className="glow-border-hover relative h-full overflow-hidden rounded-3xl border-white/60 bg-gradient-to-br from-white to-white/70 backdrop-blur-xl p-2 shadow-soft transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glow">
+                      {/* glow blob */}
+                      <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                      <CardHeader className="space-y-4">
+                        <motion.div
+                          whileHover={{ rotate: [0, -8, 8, 0] }}
+                          transition={{ duration: 0.6 }}
+                          className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary"
+                        >
+                          <Icon className="h-6 w-6" />
+                          <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/30 to-secondary/30 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-80 -z-10" />
+                        </motion.div>
+                        <CardTitle className="text-lg font-semibold">{f.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm leading-relaxed text-muted-foreground">{f.text}</p>
+                      </CardContent>
+                    </Card>
+                  </TiltCard>
                 </motion.div>
               );
             })}
@@ -1095,25 +1109,52 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* AI Health Intelligence */}
-          <div className="mt-6">
-            <AIInsightPanel
-              vitals={{
-                heartRate: sensorData.maxHrBpm,
-                spo2: sensorData.maxSpO2,
-                temperature: sensorData.tempC,
-                respiration: sensorData.respBpm,
-                movement: sensorData.fsrAU,
-                online: sensorData.onLine,
-                ecgValue: ecgValue,
-                ecgLeadsOff: sensorData.ecgLeadsOff,
-                micLevel: sensorData.micLevel,
-                movementHistory: history.pressure.map((e) => e.value),
-                ecgHistory: history.ecg.map((e) => e.value),
-              }}
-              lastUpdated={lastUpdated}
-            />
+          {/* AI Health Intelligence — holographic wrapper */}
+          <div className="relative mt-10">
+            {/* glow + grid */}
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-gradient-to-br from-primary/15 via-secondary/10 to-accent/15 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 -z-10 rounded-[36px] grid-3d opacity-60" />
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative overflow-hidden rounded-[32px] holo-border bg-gradient-to-br from-white/90 via-white/95 to-white/90 backdrop-blur-2xl shadow-[0_30px_80px_-20px_rgba(184,162,244,0.35)]"
+            >
+              <span className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl" />
+              <span className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-accent/30 to-secondary/30 blur-3xl" />
+              <div className="relative">
+                <AIInsightPanel
+                  vitals={{
+                    heartRate: sensorData.maxHrBpm,
+                    spo2: sensorData.maxSpO2,
+                    temperature: sensorData.tempC,
+                    respiration: sensorData.respBpm,
+                    movement: sensorData.fsrAU,
+                    online: sensorData.onLine,
+                    ecgValue: ecgValue,
+                    ecgLeadsOff: sensorData.ecgLeadsOff,
+                    micLevel: sensorData.micLevel,
+                    movementHistory: history.pressure.map((e) => e.value),
+                    ecgHistory: history.ecg.map((e) => e.value),
+                  }}
+                  lastUpdated={lastUpdated}
+                />
+              </div>
+            </motion.div>
           </div>
+
+          {/* Alert History Timeline */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mt-10"
+          >
+            <AlertTimeline />
+          </motion.div>
         </div>
       </section>
 
@@ -1149,18 +1190,24 @@ const Landing = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  <Card className="group relative h-full overflow-hidden rounded-3xl border-white/60 bg-white p-2 shadow-soft transition hover:-translate-y-2 hover:shadow-glow">
-                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent-warm opacity-70" />
-                    <CardHeader className="space-y-4 pt-8">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 text-primary transition-transform duration-500 group-hover:rotate-6">
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <CardTitle className="text-xl">{s.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="leading-relaxed text-muted-foreground">{s.text}</p>
-                    </CardContent>
-                  </Card>
+                  <TiltCard className="group h-full rounded-3xl">
+                    <Card className="holo-border relative h-full overflow-hidden rounded-3xl border-transparent bg-gradient-to-br from-white/95 to-white p-2 shadow-soft transition group-hover:-translate-y-1 group-hover:shadow-glow">
+                      <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br from-primary/25 to-secondary/25 blur-3xl opacity-60" />
+                      <CardHeader className="space-y-4 pt-8">
+                        <motion.div
+                          whileHover={{ rotate: 360 }}
+                          transition={{ duration: 0.8 }}
+                          className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-white shadow-glow"
+                        >
+                          <Icon className="h-6 w-6" />
+                        </motion.div>
+                        <CardTitle className="text-xl">{s.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="leading-relaxed text-muted-foreground">{s.text}</p>
+                      </CardContent>
+                    </Card>
+                  </TiltCard>
                 </motion.div>
               );
             })}

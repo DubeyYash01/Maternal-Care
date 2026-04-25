@@ -20,6 +20,16 @@ Vite + React + TypeScript + shadcn/ui maternal-health monitoring SPA with a serv
 - `GMAIL_USER` + `GMAIL_APP_PASSWORD` are used by `server/email.ts` for SMTP. The app password must be a Google App Password (16 chars, no spaces) generated at https://myaccount.google.com/apppasswords with 2-Step Verification enabled.
 - `VITE_FIREBASE_*` keys configure the Firebase client SDK in `src/lib/firebase.ts`.
 
+## Premium 3D Futuristic UI (Apr 2026)
+- **`src/components/3d/SmartBelt3D.tsx`** — R3F Canvas: glass dome torus belt, Distort sensor sphere, floating data nodes, Sparkles, pulse rings, mouse parallax via `useFrame`.
+- **`src/components/3d/SafeBelt3D.tsx`** — wraps SmartBelt3D with WebGL feature detection + Error Boundary + Suspense. Falls back to the CSS `SmartBelt` if WebGL is unavailable (sandboxes, low-end hardware) so the page never crashes.
+- **`src/components/TiltCard.tsx`** — framer-motion 3D tilt with spring rotateX/rotateY for feature + future cards.
+- **`src/components/RiskGauge.tsx`** — animated SVG arc gauge.
+- **`src/components/AlertTimeline.tsx`** — fetches `/api/alert-history` and renders a glass timeline with tier color coding.
+- **`src/components/Navigation.tsx`** — glass nav with deeper blur on scroll, IntersectionObserver section highlighting w/ framer `layoutId` pill, animated logo, mobile AnimatePresence menu.
+- **CSS utilities in `src/index.css`**: `.holo-border`, `.glow-border-hover`, `.grid-3d`, `.scan-line`, plus `holoShift`/`scan` keyframes.
+- **`src/pages/Landing.tsx`** lazy-loads 3D and uses `useIsMobile` to skip R3F entirely on mobile (CSS belt instead).
+
 ## AI Insight panel (`src/components/AIInsightPanel.tsx`)
 Sits inside the Live Dashboard section. Triggers `/api/analyze` on:
 1. First time live vitals appear

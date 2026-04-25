@@ -1,71 +1,128 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, Moon, Sun } from "lucide-react";
+import { Heart, Menu, Moon, Sun, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
+
+const navItems = [
+  { name: "About", href: "#about" },
+  { name: "Features", href: "#features" },
+  { name: "How It Works", href: "#how-it-works" },
+  { name: "Live Dashboard", href: "#dashboard" },
+  { name: "Future", href: "#future" },
+  { name: "Team", href: "#team" },
+];
 
 export const Navigation = () => {
   const location = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
+  const isLanding = location.pathname === "/";
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 12);
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navItems = [
-    { name: "About", href: "#about" },
-    { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "Live Dashboard", href: "#dashboard" },
-    { name: "Future", href: "#future" },
-    { name: "Team", href: "#team" },
-  ];
+  // Intersection-based section highlighting
+  useEffect(() => {
+    if (!isLanding) return;
+    const ids = navItems.map((n) => n.href.replace("#", ""));
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+    if (sections.length === 0) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        // Pick the entry most centered on screen
+        let best: IntersectionObserverEntry | null = null;
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          if (!best || e.intersectionRatio > best.intersectionRatio) best = e;
+        }
+        if (best?.target?.id) setActiveSection("#" + best.target.id);
+      },
+      {
+        rootMargin: "-30% 0px -55% 0px",
+        threshold: [0.05, 0.25, 0.5, 0.75, 1],
+      },
+    );
+    sections.forEach((s) => obs.observe(s));
+    return () => obs.disconnect();
+  }, [isLanding]);
 
   const isActive = (href: string) => {
     if (href.startsWith("#")) {
-      return location.hash === href;
+      if (!isLanding) return false;
+      return activeSection === href;
     }
     return location.pathname === href;
   };
 
   return (
-    <nav
-      className={`sticky top-0 z-50 border-b border-border transition-all ${
-        isScrolled ? "bg-white/70 dark:bg-slate-950/70 shadow-soft backdrop-blur-xl" : "bg-transparent"
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className={`sticky top-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? "border-b border-white/40 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl shadow-[0_8px_32px_-12px_rgba(125,203,244,0.25)]"
+          : "border-b border-transparent bg-white/30 dark:bg-slate-950/30 backdrop-blur-md"
       }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
+            <motion.div
+              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.08 }}
+              transition={{ duration: 0.5 }}
+              className="relative w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-glow"
+            >
               <Heart className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-xl font-semibold text-gradient">MaternalCare</span>
+              <span className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary opacity-50 blur-md -z-10" />
+            </motion.div>
+            <span className="text-xl font-semibold text-gradient tracking-tight">MaternalCare</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-2 rounded-full text-sm transition-all ${
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                }`}
-              >
-                {item.name}
-              </a>
-            ))}
+          <div className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="relative px-3 py-2 rounded-full text-sm transition-all"
+                >
+                  <span
+                    className={`relative z-10 transition-colors ${
+                      active ? "text-primary font-semibold" : "text-foreground/70 hover:text-foreground"
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/15 to-secondary/15 ring-1 ring-primary/20"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </a>
+              );
+            })}
 
-            <Button variant="outline" asChild>
+            <Button
+              asChild
+              className="ml-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white shadow-glow hover:scale-[1.04] transition-transform"
+            >
               <Link to="/login">Get Started</Link>
             </Button>
 
@@ -74,6 +131,7 @@ export const Navigation = () => {
               size="icon"
               className="rounded-full"
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
             >
               {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
@@ -81,54 +139,66 @@ export const Navigation = () => {
 
           {/* Mobile menu button */}
           <Button
-            variant="outline"
-            size="sm"
-            className="md:hidden"
+            variant="ghost"
+            size="icon"
+            className="md:hidden rounded-full"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
           >
-            <Menu className="h-4 w-4" />
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border bg-background/80 backdrop-blur">
-            <div className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={`px-3 py-2 rounded-lg transition-all ${
-                    isActive(item.href)
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="flex flex-col gap-1 py-3 border-t border-border/40">
+                {navItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className={`px-3 py-2.5 rounded-xl transition-all ${
+                      isActive(item.href)
+                        ? "bg-gradient-to-r from-primary/15 to-secondary/15 text-primary font-medium"
+                        : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                ))}
+
+                <Button
+                  asChild
+                  className="mt-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white"
                 >
-                  {item.name}
-                </a>
-              ))}
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                    Get Started
+                  </Link>
+                </Button>
 
-              <Button variant="outline" asChild className="mt-2">
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="justify-start"
-                onClick={() => {
-                  setTheme(resolvedTheme === "dark" ? "light" : "dark");
-                  setIsMenuOpen(false);
-                }}
-              >
-                {resolvedTheme === "dark" ? "Switch to Light" : "Switch to Dark"}
-              </Button>
-            </div>
-          </div>
-        )}
+                <Button
+                  variant="ghost"
+                  className="justify-start rounded-xl"
+                  onClick={() => {
+                    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  {resolvedTheme === "dark" ? "Switch to Light" : "Switch to Dark"}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
