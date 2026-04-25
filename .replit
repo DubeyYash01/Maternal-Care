@@ -39,10 +39,10 @@ localPort = 5001
 externalPort = 3000
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "static"
 build = ["npm", "run", "build"]
-publicDir = "dist"
 run = ["node", "./dist/index.cjs"]
+publicDir = "dist"
 
 [userenv]
 
