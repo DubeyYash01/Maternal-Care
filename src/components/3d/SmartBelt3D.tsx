@@ -5,74 +5,223 @@ import {
   Float,
   Html,
   Line,
-  RoundedBox,
   Sparkles,
 } from "@react-three/drei";
 import * as THREE from "three";
 
-const BELT_RADIUS = 1.7;
-const BELT_HEIGHT = 0.95;
+/* ------------------------------------------------------------------
+   MOTHER SILHOUETTE — side profile, abstract & elegant
+   Drawn as a 2D Shape and extruded for a sculpted 3D form.
+------------------------------------------------------------------ */
+const buildMotherShape = () => {
+  const s = new THREE.Shape();
+  // Start at top-back of head, going clockwise over the head
+  s.moveTo(-0.2, 3.25);
+  s.quadraticCurveTo(0.0, 3.55, 0.22, 3.2);
+  // Forehead → smooth face (no features, abstract)
+  s.bezierCurveTo(0.32, 2.95, 0.28, 2.82, 0.16, 2.72);
+  // Neck front
+  s.lineTo(0.18, 2.5);
+  // Chest / breast curve forward
+  s.bezierCurveTo(0.46, 2.45, 0.58, 2.25, 0.36, 2.05);
+  // Belly bulge — the iconic pregnant curve
+  s.bezierCurveTo(0.62, 1.95, 1.08, 1.6, 1.0, 1.15);
+  s.bezierCurveTo(0.95, 0.78, 0.55, 0.68, 0.36, 0.6);
+  // Hip front → thigh
+  s.bezierCurveTo(0.42, 0.25, 0.34, -0.25, 0.3, -0.65);
+  // Shin → foot front
+  s.lineTo(0.32, -1.4);
+  s.lineTo(0.46, -1.52);
+  // Under foot
+  s.lineTo(-0.18, -1.52);
+  s.lineTo(-0.08, -1.4);
+  // Calf back
+  s.lineTo(-0.12, -0.6);
+  // Thigh back → buttock
+  s.bezierCurveTo(-0.06, -0.2, -0.04, 0.3, -0.36, 0.75);
+  // Lower back curve in
+  s.bezierCurveTo(-0.42, 1.05, -0.22, 1.25, -0.16, 1.55);
+  // Mid back → upper back
+  s.bezierCurveTo(-0.18, 1.95, -0.22, 2.4, -0.18, 2.7);
+  // Back of neck
+  s.lineTo(-0.08, 2.84);
+  // Back of head closes the loop
+  s.bezierCurveTo(-0.26, 2.92, -0.3, 3.12, -0.2, 3.25);
+  return s;
+};
 
-const HeartShape = ({ scale = 1 }: { scale?: number }) => {
+const MotherSilhouette = () => {
   const geometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    const x = 0;
-    const y = 0;
-    shape.moveTo(x, y);
-    shape.bezierCurveTo(x, y - 0.3, x - 0.6, y - 0.3, x - 0.6, y + 0.2);
-    shape.bezierCurveTo(x - 0.6, y + 0.55, x - 0.3, y + 0.75, x, y + 1.05);
-    shape.bezierCurveTo(x + 0.3, y + 0.75, x + 0.6, y + 0.55, x + 0.6, y + 0.2);
-    shape.bezierCurveTo(x + 0.6, y - 0.3, x, y - 0.3, x, y);
+    const shape = buildMotherShape();
     const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: 0.18,
+      depth: 0.45,
       bevelEnabled: true,
-      bevelSegments: 4,
-      bevelSize: 0.05,
-      bevelThickness: 0.05,
-      curveSegments: 24,
+      bevelSegments: 6,
+      bevelSize: 0.08,
+      bevelThickness: 0.08,
+      curveSegments: 48,
     });
     geo.center();
-    geo.rotateZ(Math.PI);
     return geo;
   }, []);
 
+  // Subtle gradient by overlaying a soft lavender mesh on top
   const ref = useRef<THREE.Mesh>(null);
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    const pulse = 1 + Math.sin(t * 2.4) * 0.1;
-    ref.current.scale.setScalar(scale * pulse);
-    const mat = ref.current.material as THREE.MeshStandardMaterial;
-    mat.emissiveIntensity = 1.8 + Math.sin(t * 2.4) * 0.7;
-  });
 
   return (
-    <mesh ref={ref} geometry={geometry}>
-      <meshStandardMaterial
-        color="#ff6fa3"
-        emissive="#ff4d8d"
-        emissiveIntensity={2}
-        roughness={0.25}
-        metalness={0.2}
-      />
-    </mesh>
+    <group>
+      {/* Main sculpted body — pearlescent lavender / blue */}
+      <mesh ref={ref} geometry={geometry} castShadow receiveShadow>
+        <meshPhysicalMaterial
+          color="#e0e7ff"
+          roughness={0.35}
+          metalness={0.15}
+          clearcoat={1}
+          clearcoatRoughness={0.15}
+          sheen={1}
+          sheenColor={new THREE.Color("#c7b8ff")}
+          sheenRoughness={0.4}
+          envMapIntensity={1.2}
+          emissive="#a5b4fc"
+          emissiveIntensity={0.08}
+        />
+      </mesh>
+
+      {/* Soft inner glow rim — slightly smaller, behind */}
+      <mesh
+        geometry={geometry}
+        position={[0, 0, -0.15]}
+        scale={[1.04, 1.04, 0.6]}
+      >
+        <meshBasicMaterial
+          color="#a5b4fc"
+          transparent
+          opacity={0.18}
+        />
+      </mesh>
+    </group>
   );
 };
 
-type LabelProps = {
-  text: string;
-  position: [number, number, number];
-  color: string;
-  anchorPosition: [number, number, number];
+/* ------------------------------------------------------------------
+   BABY CURL — small abstract curled-baby silhouette inside the womb
+------------------------------------------------------------------ */
+const buildBabyShape = () => {
+  const s = new THREE.Shape();
+  // Curled baby — head bigger, body curling around
+  // Start at top of head
+  s.moveTo(0, 0.5);
+  s.bezierCurveTo(0.4, 0.5, 0.45, 0.1, 0.25, -0.05);
+  s.bezierCurveTo(0.45, -0.2, 0.4, -0.45, 0.15, -0.5);
+  s.bezierCurveTo(-0.1, -0.55, -0.35, -0.4, -0.4, -0.15);
+  s.bezierCurveTo(-0.45, 0.05, -0.35, 0.25, -0.2, 0.3);
+  s.bezierCurveTo(-0.35, 0.4, -0.3, 0.55, 0, 0.5);
+  return s;
 };
 
-const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) => {
+const BabyInWomb = () => {
+  const geometry = useMemo(() => {
+    const shape = buildBabyShape();
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.12,
+      bevelEnabled: true,
+      bevelSegments: 4,
+      bevelSize: 0.04,
+      bevelThickness: 0.04,
+      curveSegments: 24,
+    });
+    geo.center();
+    return geo;
+  }, []);
+
+  const groupRef = useRef<THREE.Group>(null);
+  const auraRef = useRef<THREE.Mesh>(null);
+  const haloRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (groupRef.current) {
+      // Heartbeat pulse on baby
+      const pulse = 1 + Math.sin(t * 2.6) * 0.06 + Math.sin(t * 5.2) * 0.02;
+      groupRef.current.scale.setScalar(pulse * 0.55);
+      const mat = (groupRef.current.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = 1.2 + Math.sin(t * 2.6) * 0.6;
+    }
+    if (auraRef.current) {
+      const s = 1 + Math.sin(t * 1.5) * 0.08;
+      auraRef.current.scale.set(s, s, 1);
+      const mat = auraRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.3 + Math.sin(t * 1.5) * 0.1;
+    }
+    if (haloRef.current) {
+      haloRef.current.rotation.z = t * 0.3;
+    }
+  });
+
+  // Position baby inside the belly bulge area of the mother shape
+  // Mother is centered, belly center roughly at original (~0.6, ~1.3) in shape coords.
+  // After geo.center() the centroid shifts, so we tune visually:
+  const wombPos: [number, number, number] = [0.45, 0.05, 0.3];
+
+  return (
+    <group position={wombPos}>
+      {/* Soft golden glow disc behind baby */}
+      <mesh position={[0, 0, -0.05]}>
+        <circleGeometry args={[0.7, 48]} />
+        <meshBasicMaterial color="#fde68a" transparent opacity={0.55} />
+      </mesh>
+
+      {/* Outer protection aura */}
+      <mesh ref={auraRef} position={[0, 0, -0.08]}>
+        <ringGeometry args={[0.7, 0.85, 64]} />
+        <meshBasicMaterial color="#fbbf24" transparent opacity={0.35} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Rotating halo of dashes */}
+      <mesh ref={haloRef} position={[0, 0, -0.04]}>
+        <ringGeometry args={[0.95, 1.0, 64, 1, 0, Math.PI * 1.6]} />
+        <meshBasicMaterial color="#a5f3fc" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Baby curl */}
+      <group ref={groupRef}>
+        <mesh geometry={geometry}>
+          <meshStandardMaterial
+            color="#fbcfe8"
+            emissive="#f472b6"
+            emissiveIntensity={1.4}
+            roughness={0.35}
+            metalness={0.1}
+          />
+        </mesh>
+      </group>
+
+      {/* Heartbeat point light inside womb */}
+      <pointLight
+        color="#fbbf24"
+        intensity={2.2}
+        distance={3}
+        decay={2}
+      />
+    </group>
+  );
+};
+
+/* ------------------------------------------------------------------
+   FLOATING BADGES around the model
+------------------------------------------------------------------ */
+type BadgeProps = {
+  text: string;
+  position: [number, number, number];
+  anchor: [number, number, number];
+  color: string;
+  icon: string;
+};
+
+const Badge = ({ text, position, anchor, color, icon }: BadgeProps) => {
   const linePoints = useMemo(
-    () => [
-      new THREE.Vector3(...anchorPosition),
-      new THREE.Vector3(...position),
-    ],
-    [position, anchorPosition],
+    () => [new THREE.Vector3(...anchor), new THREE.Vector3(...position)],
+    [position, anchor],
   );
 
   return (
@@ -82,7 +231,7 @@ const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) =>
         color={color}
         lineWidth={1.2}
         transparent
-        opacity={0.6}
+        opacity={0.55}
         dashed
         dashScale={20}
         dashSize={0.06}
@@ -93,28 +242,24 @@ const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) =>
           <Html
             center
             distanceFactor={6}
-            style={{
-              pointerEvents: "none",
-              userSelect: "none",
-              whiteSpace: "nowrap",
-            }}
+            style={{ pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                padding: "5px 10px",
+                gap: 8,
+                padding: "6px 12px",
                 borderRadius: 999,
-                background: "rgba(11, 18, 39, 0.72)",
+                background: "rgba(15, 23, 42, 0.72)",
                 border: `1px solid ${color}66`,
                 color: "#fff",
                 fontFamily:
                   "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto",
                 fontSize: 12,
                 fontWeight: 600,
-                letterSpacing: 1,
-                boxShadow: `0 0 14px ${color}55`,
+                letterSpacing: 0.6,
+                boxShadow: `0 0 16px ${color}55`,
                 backdropFilter: "blur(6px)",
               }}
             >
@@ -127,6 +272,7 @@ const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) =>
                   boxShadow: `0 0 10px ${color}`,
                 }}
               />
+              <span style={{ opacity: 0.9 }}>{icon}</span>
               {text}
             </div>
           </Html>
@@ -136,191 +282,9 @@ const FloatingLabel = ({ text, position, color, anchorPosition }: LabelProps) =>
   );
 };
 
-const SensorPod = () => {
-  const ledRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!ledRef.current) return;
-    const t = state.clock.elapsedTime;
-    ledRef.current.children.forEach((child, i) => {
-      const mesh = child as THREE.Mesh;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 1.6 + Math.sin(t * 3 + i * 0.8) * 1.5;
-    });
-  });
-
-  return (
-    <group position={[0, 0, BELT_RADIUS - 0.05]}>
-      {/* Pod outer body - cyan glossy */}
-      <RoundedBox args={[1.15, 0.85, 0.34]} radius={0.17} smoothness={6}>
-        <meshPhysicalMaterial
-          color="#0e7490"
-          roughness={0.15}
-          metalness={0.7}
-          clearcoat={1}
-          clearcoatRoughness={0.05}
-          emissive="#0891b2"
-          emissiveIntensity={0.35}
-          envMapIntensity={1.2}
-        />
-      </RoundedBox>
-
-      {/* Bezel ring around dome */}
-      <mesh position={[0, 0, 0.18]}>
-        <torusGeometry args={[0.36, 0.022, 16, 64]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.95} roughness={0.15} />
-      </mesh>
-
-      {/* Translucent glass dome */}
-      <mesh position={[0, 0, 0.19]}>
-        <sphereGeometry args={[0.34, 48, 48, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshPhysicalMaterial
-          color="#a5f3fc"
-          transparent
-          opacity={0.35}
-          transmission={0.9}
-          roughness={0}
-          thickness={0.3}
-          clearcoat={1}
-          ior={1.4}
-        />
-      </mesh>
-
-      {/* Inner glow disc behind heart */}
-      <mesh position={[0, 0, 0.1]}>
-        <circleGeometry args={[0.3, 48]} />
-        <meshBasicMaterial color="#67e8f9" transparent opacity={0.55} />
-      </mesh>
-
-      {/* Heart core */}
-      <group position={[0, 0, 0.22]} scale={0.34}>
-        <HeartShape />
-      </group>
-
-      {/* Status LEDs row */}
-      <group ref={ledRef} position={[0, -0.32, 0.18]}>
-        {[-0.24, 0, 0.24].map((x, i) => (
-          <mesh key={i} position={[x, 0, 0]}>
-            <sphereGeometry args={[0.04, 16, 16]} />
-            <meshStandardMaterial
-              color={i === 0 ? "#7DCBF4" : i === 1 ? "#F7C0D8" : "#a7f3d0"}
-              emissive={i === 0 ? "#7DCBF4" : i === 1 ? "#F7C0D8" : "#a7f3d0"}
-              emissiveIntensity={2.5}
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Top brand bar */}
-      <mesh position={[0, 0.34, 0.18]}>
-        <boxGeometry args={[0.5, 0.03, 0.001]} />
-        <meshStandardMaterial color="#67e8f9" emissive="#67e8f9" emissiveIntensity={1.2} />
-      </mesh>
-    </group>
-  );
-};
-
-const Belt = () => {
-  const beltRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!beltRef.current) return;
-    const t = state.clock.elapsedTime;
-    const breathe = 1 + Math.sin(t * 1.2) * 0.012;
-    beltRef.current.scale.set(breathe, breathe, breathe);
-  });
-
-  return (
-    <group ref={beltRef}>
-      {/* Outer fabric band - soft blue / silver lavender */}
-      <mesh>
-        <cylinderGeometry
-          args={[BELT_RADIUS, BELT_RADIUS, BELT_HEIGHT, 96, 1, true]}
-        />
-        <meshPhysicalMaterial
-          color="#c7d2fe"
-          roughness={0.65}
-          metalness={0.25}
-          sheen={1}
-          sheenColor={new THREE.Color("#a5b4fc")}
-          sheenRoughness={0.5}
-          side={THREE.DoubleSide}
-          clearcoat={0.4}
-          clearcoatRoughness={0.3}
-        />
-      </mesh>
-
-      {/* Inner padded layer (lavender) */}
-      <mesh>
-        <cylinderGeometry
-          args={[BELT_RADIUS - 0.08, BELT_RADIUS - 0.08, BELT_HEIGHT - 0.05, 96, 1, true]}
-        />
-        <meshStandardMaterial
-          color="#818cf8"
-          roughness={1}
-          metalness={0}
-          side={THREE.DoubleSide}
-          emissive="#6366f1"
-          emissiveIntensity={0.1}
-        />
-      </mesh>
-
-      {/* Top stitching */}
-      <mesh position={[0, BELT_HEIGHT / 2 - 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.005, 0.012, 8, 128]} />
-        <meshStandardMaterial color="#475569" roughness={0.4} />
-      </mesh>
-
-      {/* Bottom stitching */}
-      <mesh position={[0, -BELT_HEIGHT / 2 + 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.005, 0.012, 8, 128]} />
-        <meshStandardMaterial color="#475569" roughness={0.4} />
-      </mesh>
-
-      {/* Top trim accent (cyan) */}
-      <mesh position={[0, BELT_HEIGHT / 2 - 0.005, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.012, 0.022, 12, 128]} />
-        <meshStandardMaterial
-          color="#67e8f9"
-          emissive="#67e8f9"
-          emissiveIntensity={0.7}
-          roughness={0.4}
-        />
-      </mesh>
-
-      {/* Bottom trim accent (pink) */}
-      <mesh position={[0, -BELT_HEIGHT / 2 + 0.005, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BELT_RADIUS + 0.012, 0.022, 12, 128]} />
-        <meshStandardMaterial
-          color="#F7C0D8"
-          emissive="#F7C0D8"
-          emissiveIntensity={0.7}
-          roughness={0.4}
-        />
-      </mesh>
-
-      {/* Vertical seam decoration on sides */}
-      {[Math.PI * 0.32, -Math.PI * 0.32].map((angle, i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.sin(angle) * (BELT_RADIUS + 0.012),
-            0,
-            Math.cos(angle) * (BELT_RADIUS + 0.012),
-          ]}
-          rotation={[0, angle, 0]}
-        >
-          <boxGeometry args={[0.018, BELT_HEIGHT - 0.1, 0.025]} />
-          <meshStandardMaterial color="#475569" roughness={0.5} />
-        </mesh>
-      ))}
-
-      {/* Front sensor pod */}
-      <SensorPod />
-    </group>
-  );
-};
-
+/* ------------------------------------------------------------------
+   SCENE
+------------------------------------------------------------------ */
 const Scene = () => {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -330,77 +294,92 @@ const Scene = () => {
     const mx = state.mouse.x;
     const my = state.mouse.y;
 
-    // 3/4 perspective base + slow continuous rotation + parallax
-    const baseY = -0.45;
-    const baseX = -0.12;
-    const slowRotate = t * 0.12; // continuous slow rotation
-    const swayX = Math.sin(t * 0.7) * 0.03;
+    // Gentle breathing & sway
+    const breathe = 1 + Math.sin(t * 1.0) * 0.012;
+    groupRef.current.scale.set(breathe * 1.15, breathe * 1.15, breathe * 1.15);
 
+    // Mouse parallax (very subtle so it stays graceful)
     groupRef.current.rotation.y = THREE.MathUtils.lerp(
       groupRef.current.rotation.y,
-      baseY + slowRotate * 0.3 + Math.sin(t * 0.5) * 0.08 + mx * 0.18,
+      mx * 0.12 + Math.sin(t * 0.4) * 0.05,
       0.05,
     );
     groupRef.current.rotation.x = THREE.MathUtils.lerp(
       groupRef.current.rotation.x,
-      baseX + swayX - my * 0.08,
+      -my * 0.06,
       0.05,
     );
-    // Slow float up/down
-    groupRef.current.position.y = Math.sin(t * 0.8) * 0.08;
+    // Float up & down softly
+    groupRef.current.position.y = Math.sin(t * 0.7) * 0.06;
   });
 
   return (
-    <group ref={groupRef} scale={1.6}>
-      <Belt />
+    <group ref={groupRef}>
+      <MotherSilhouette />
+      <BabyInWomb />
 
-      {/* Floating labels with anchor lines into belt */}
-      <FloatingLabel
-        text="ECG"
-        position={[2.6, 1.0, 0.5]}
-        anchorPosition={[1.2, 0.3, 0.8]}
-        color="#ff6fa3"
-      />
-      <FloatingLabel
-        text="SpO₂"
-        position={[-2.7, 0.85, 0.4]}
-        anchorPosition={[-1.2, 0.3, 0.8]}
+      {/* Floating badges */}
+      <Badge
+        text="LIVE MONITORING"
+        position={[2.6, 2.0, 0.6]}
+        anchor={[0.6, 1.6, 0.4]}
         color="#7DCBF4"
+        icon="●"
       />
-      <FloatingLabel
-        text="TEMP"
-        position={[2.5, -0.95, 0.6]}
-        anchorPosition={[1.2, -0.3, 0.8]}
-        color="#F7C0D8"
+      <Badge
+        text="AI CARE"
+        position={[-2.6, 1.4, 0.4]}
+        anchor={[-0.4, 1.2, 0.4]}
+        color="#a78bfa"
+        icon="✦"
       />
-      <FloatingLabel
-        text="AI SYNC"
-        position={[-2.6, -0.95, 0.5]}
-        anchorPosition={[-1.2, -0.3, 0.8]}
+      <Badge
+        text="BABY SAFE"
+        position={[2.7, 0.0, 0.7]}
+        anchor={[0.9, 0.1, 0.4]}
+        color="#fbbf24"
+        icon="♥"
+      />
+      <Badge
+        text="SECURE HEALTH"
+        position={[-2.6, -0.4, 0.5]}
+        anchor={[-0.4, -0.4, 0.4]}
         color="#a7f3d0"
+        icon="✓"
+      />
+      <Badge
+        text="REAL-TIME SYNC"
+        position={[2.5, -1.6, 0.6]}
+        anchor={[0.4, -1.2, 0.4]}
+        color="#F7C0D8"
+        icon="↻"
       />
 
       <Sparkles
-        count={70}
-        scale={[6, 4, 6]}
+        count={90}
+        scale={[8, 6, 6]}
         size={2.4}
-        color="#B8A2F4"
-        speed={0.35}
-        opacity={0.7}
+        color="#c4b5fd"
+        speed={0.3}
+        opacity={0.65}
       />
     </group>
   );
 };
 
 const PulseRings = () => {
-  const refs = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)];
+  const refs = [
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+  ];
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     refs.forEach((r, i) => {
       if (!r.current) return;
       const phase = (t + i * 1.0) % 3;
-      const s = 1 + (phase / 3) * 1.8;
+      const s = 1 + (phase / 3) * 1.6;
       const o = 1 - phase / 3;
       r.current.scale.set(s, 1, s);
       const mat = r.current.material as THREE.MeshBasicMaterial;
@@ -409,10 +388,10 @@ const PulseRings = () => {
   });
 
   return (
-    <group position={[0, -1.5, 0]}>
+    <group position={[0, -1.8, 0]}>
       {refs.map((r, i) => (
         <mesh key={i} ref={r} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[BELT_RADIUS + 0.05, BELT_RADIUS + 0.12, 80]} />
+          <ringGeometry args={[1.6, 1.7, 80]} />
           <meshBasicMaterial
             color="#a78bfa"
             transparent
@@ -429,37 +408,44 @@ export const SmartBelt3D = () => {
   return (
     <div
       className="relative z-10 mx-auto w-full overflow-visible"
-      style={{ height: "min(80vh, 600px)" }}
+      style={{ height: "min(80vh, 620px)" }}
     >
-      {/* Faint gradient halo backdrop for visibility */}
+      {/* Faint pastel gradient halo behind sculpture */}
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(circle at 50% 55%, rgba(167,139,250,0.28) 0%, rgba(125,203,244,0.18) 30%, rgba(247,192,216,0.12) 55%, rgba(255,255,255,0) 75%)",
+            "radial-gradient(circle at 50% 55%, rgba(196,181,253,0.32) 0%, rgba(165,243,252,0.22) 30%, rgba(251,207,232,0.18) 55%, rgba(255,255,255,0) 78%)",
           filter: "blur(8px)",
         }}
       />
 
       <Canvas
         style={{ width: "100%", height: "100%" }}
-        camera={{ position: [0, 0, 6], fov: 45 }}
+        camera={{ position: [0, 0.4, 6.5], fov: 42 }}
         dpr={[1, 1.8]}
         gl={{ antialias: true, alpha: true }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={1.4} />
-          <directionalLight position={[5, 5, 5]} intensity={2} color="#ffffff" />
-          <pointLight position={[-5, 3, 5]} intensity={1.5} color="#a5f3fc" />
-          <hemisphereLight intensity={1} groundColor="#1e293b" color="#ffffff" />
-          <spotLight position={[0, 4, 4]} intensity={0.9} angle={0.7} penumbra={0.5} color="#7DCBF4" />
+          <ambientLight intensity={1.1} />
+          <directionalLight position={[5, 5, 5]} intensity={1.8} color="#ffffff" />
+          <pointLight position={[-5, 3, 5]} intensity={1.3} color="#a5f3fc" />
+          <pointLight position={[3, -2, 4]} intensity={0.9} color="#fbcfe8" />
+          <hemisphereLight intensity={0.9} groundColor="#312e81" color="#ffffff" />
+          <spotLight
+            position={[0, 4, 4]}
+            intensity={0.9}
+            angle={0.7}
+            penumbra={0.5}
+            color="#c4b5fd"
+          />
           <Scene />
           <PulseRings />
           <ContactShadows
-            position={[0, -1.7, 0]}
-            opacity={0.55}
+            position={[0, -1.95, 0]}
+            opacity={0.5}
             scale={9}
-            blur={2.5}
+            blur={2.6}
             far={4}
             color="#1e1b4b"
           />

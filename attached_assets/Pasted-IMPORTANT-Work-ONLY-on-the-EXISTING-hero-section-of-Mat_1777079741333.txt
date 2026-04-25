@@ -1,0 +1,168 @@
+IMPORTANT: Work ONLY on the EXISTING hero section of Maternal Care website.
+
+Current 3D hero visual is ugly / unclear / not emotional.
+
+Remove current object.
+
+Replace it with a BEAUTIFUL, GENTLE, PREMIUM 3D MATERNITY VISUAL.
+
+Do NOT touch backend.
+Do NOT touch Firebase.
+Do NOT break layout.
+
+Only replace hero 3D visual.
+
+==================================================
+MASTER GOAL
+==================================================
+
+When someone opens the website, they should instantly feel:
+
+Care
+Motherhood
+Protection
+Advanced healthcare
+Love + Technology
+
+Need emotional + premium first impression.
+
+==================================================
+NEW HERO VISUAL OPTION (BEST)
+==================================================
+
+Create elegant 3D animated silhouette / semi-realistic model of:
+
+A pregnant mother standing gently in side profile,
+
+with a soft glowing baby visible inside womb area.
+
+OR
+
+Mother softly holding belly with caring pose.
+
+This should look artistic, premium, modern.
+
+NOT cartoon.
+
+NOT creepy.
+
+NOT hyper realistic.
+
+==================================================
+VISUAL STYLE
+==================================================
+
+Use:
+
+- soft pastel gradients
+- healthcare blue + lavender + white
+- smooth glassmorphism glow
+- elegant feminine shape
+- minimal premium sculpture style
+
+Think:
+
+Apple ad + maternal wellness brand + futuristic healthcare.
+
+==================================================
+BABY IN WOMB EFFECT
+==================================================
+
+Inside belly area:
+
+- warm golden / soft blue glow
+- subtle baby silhouette
+- heartbeat pulse light
+- circular protection aura
+
+Should symbolize safe fetal monitoring.
+
+==================================================
+ANIMATION
+==================================================
+
+Very subtle and graceful:
+
+- slow breathing motion
+- soft floating movement
+- gentle light pulse in womb area
+- tiny surrounding particles
+
+No aggressive motion.
+
+==================================================
+CAMERA / POSITION
+==================================================
+
+Right side hero section.
+
+Mother visible clearly.
+
+3/4 angle or side profile.
+
+Sized properly so it fills hero right area.
+
+==================================================
+BACKGROUND
+==================================================
+
+Soft gradient light halo behind mother.
+
+Floating particles.
+
+Medical futuristic energy lines optional.
+
+==================================================
+EXTRA UI BADGES AROUND MODEL
+==================================================
+
+Small floating labels:
+
+Live Monitoring
+AI Care
+Secure Health
+Baby Safe
+Real-Time Sync
+
+==================================================
+IF FULL CHARACTER TOO HEAVY
+==================================================
+
+Use elegant sculpted silhouette instead of detailed human model.
+
+Can use abstract smooth 3D form.
+
+==================================================
+AVOID
+==================================================
+
+Do NOT make:
+
+- ugly stock woman image
+- cartoon pregnant lady
+- scary fetus image
+- random object
+- cheap illustration
+
+==================================================
+PERFORMANCE
+==================================================
+
+Optimized for fast loading.
+
+If needed use static rendered 3D style image with motion layers.
+
+==================================================
+FINAL IMPRESSION
+==================================================
+
+Should feel like premium maternal care brand homepage.
+
+Judges should say:
+"Wow, this feels meaningful and modern."
+
+==================================================
+BUILD NOW
+==================================================
+
+Replace ugly hero object with beautiful gentle animated pregnant mother + baby care themed premium visual.
