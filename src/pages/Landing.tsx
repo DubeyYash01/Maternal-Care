@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TiltCard } from "@/components/TiltCard";
 import { AlertTimeline } from "@/components/AlertTimeline";
-import { SafeBelt3D } from "@/components/3d/SafeBelt3D";
+import heroImage from "@assets/image_1777080058569.png";
 import {
   Activity,
   ArrowRight,
@@ -543,7 +543,45 @@ const Landing = () => {
               transition={{ duration: 1, delay: 0.1 }}
               className="relative"
             >
-              {isMobile ? <SmartBelt /> : <SafeBelt3D fallback={<SmartBelt />} />}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  y: [0, -10, 0],
+                }}
+                transition={{
+                  opacity: { duration: 1.0, delay: 0.1 },
+                  scale: { duration: 1.0, delay: 0.1 },
+                  y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+                }}
+                className="relative mx-auto w-full max-w-[640px]"
+              >
+                {/* Soft pastel halo behind image */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -z-10"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 50% 55%, rgba(196,181,253,0.35) 0%, rgba(165,243,252,0.22) 35%, rgba(251,207,232,0.18) 60%, rgba(255,255,255,0) 80%)",
+                    filter: "blur(20px)",
+                  }}
+                />
+                <motion.img
+                  src={heroImage}
+                  alt="Premium maternal care illustration"
+                  loading="eager"
+                  decoding="async"
+                  className="relative h-auto w-full select-none object-contain"
+                  style={{
+                    filter:
+                      "drop-shadow(0 30px 50px rgba(124,58,237,0.18)) drop-shadow(0 8px 24px rgba(125,203,244,0.18))",
+                  }}
+                  animate={{ scale: [1, 1.015, 1] }}
+                  transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+                  draggable={false}
+                />
+              </motion.div>
               <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 backdrop-blur">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" /> FDA-inspired safety

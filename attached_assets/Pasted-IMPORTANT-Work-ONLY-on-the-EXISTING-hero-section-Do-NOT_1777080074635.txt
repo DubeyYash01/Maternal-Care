@@ -1,0 +1,101 @@
+IMPORTANT: Work ONLY on the EXISTING hero section.
+
+Do NOT create any new 3D model.
+Do NOT generate any random object.
+Do NOT use current ugly hero visual.
+
+REMOVE the current hero right-side visual completely.
+
+I will upload a custom image asset for hero section.
+
+Use ONLY the uploaded image as the hero visual.
+
+==================================================
+TASK
+==================================================
+
+Replace current right-side hero component with my uploaded image.
+
+The uploaded image should be the main premium hero artwork.
+
+==================================================
+HOW TO IMPLEMENT
+==================================================
+
+1. Remove:
+- Three.js canvas
+- 3D model
+- random rings
+- generated graphics
+
+2. Add uploaded image in hero right side.
+
+3. Keep left side text exactly as current.
+
+4. Keep buttons exactly working.
+
+==================================================
+IMAGE STYLING
+==================================================
+
+Hero image should look premium.
+
+Use:
+
+- object-fit: contain
+- max width large desktop
+- centered vertically
+- soft drop shadow
+- slight glow behind image
+- rounded edges only if suitable
+
+==================================================
+ANIMATION
+==================================================
+
+Apply elegant subtle motion only:
+
+- floating up/down slowly
+- fade in on page load
+- tiny scale breathing effect
+
+No over-animation.
+
+==================================================
+RESPONSIVE
+==================================================
+
+Desktop:
+Large image right side.
+
+Tablet:
+Medium centered.
+
+Mobile:
+Move image above text or below heading.
+
+==================================================
+BACKGROUND
+==================================================
+
+Keep current soft gradient hero background.
+
+==================================================
+PERFORMANCE
+==================================================
+
+Use optimized image loading.
+
+Lazy load if needed.
+
+==================================================
+FINAL GOAL
+==================================================
+
+Hero section should now look clean, premium, and professional using my uploaded image instead of ugly generated object.
+
+==================================================
+BUILD NOW
+==================================================
+
+Remove current hero visual and replace with uploaded custom image asset.
