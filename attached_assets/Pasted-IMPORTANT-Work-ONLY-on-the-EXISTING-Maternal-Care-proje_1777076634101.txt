@@ -1,0 +1,372 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project in this Replit workspace.
+
+Do NOT create a new project.
+Do NOT rebuild from scratch.
+Do NOT break Firebase realtime syncing.
+Do NOT remove current dashboard or AI system.
+
+Use current project only.
+
+==================================================
+NEW FEATURE TO BUILD
+==================================================
+
+ADVANCED AUTOMATIC EMAIL ALERT SYSTEM
+based on AI Risk Score.
+
+The current AI engine already calculates risk score from live Firebase sensor values.
+
+Now use that score to trigger automatic email alerts intelligently.
+
+==================================================
+ALERT TRIGGER LEVELS
+==================================================
+
+Create 3 trigger levels:
+
+--------------------------------------------------
+LEVEL 1: MODERATE RISK ALERT
+--------------------------------------------------
+
+Trigger when:
+
+AI Risk Score >= 65 and < 75
+
+Status:
+Moderate Risk
+
+Color:
+Yellow / Amber
+
+Meaning:
+Vitals need attention soon.
+
+--------------------------------------------------
+LEVEL 2: HIGH RISK ALERT
+--------------------------------------------------
+
+Trigger when:
+
+AI Risk Score >= 75 and < 80
+
+Status:
+High Risk
+
+Color:
+Orange
+
+Meaning:
+Health condition worsening. Immediate review needed.
+
+--------------------------------------------------
+LEVEL 3: CRITICAL ALERT
+--------------------------------------------------
+
+Trigger when:
+
+AI Risk Score >= 80
+
+Status:
+Critical Emergency
+
+Color:
+Red
+
+Meaning:
+Potential emergency. Immediate action required.
+
+==================================================
+EMAIL RECEIVERS
+==================================================
+
+Automatically send alerts to these 4 emails:
+
+yashdubeyenter15@gmail.com
+pandeysneha3004@gmail.com
+akankshadsingh02@gmail.com
+princesharma8050@gmail.com
+
+==================================================
+EMAIL DELIVERY SYSTEM
+==================================================
+
+Use backend secure mail system.
+
+Recommended:
+Nodemailer + Gmail SMTP
+
+OR existing mail provider if easier.
+
+Backend only.
+
+Never expose credentials frontend-side.
+
+==================================================
+USE LIVE DATA ONLY
+==================================================
+
+Use actual current Firebase values:
+
+HR
+SpO2
+Temp
+Resp
+Pressure
+ECG
+Mic
+Sensor status
+Risk Score
+
+No dummy values.
+
+==================================================
+3 DIFFERENT EMAIL TEMPLATES
+==================================================
+
+==================================================
+EMAIL TEMPLATE 1
+MODERATE RISK (65+)
+==================================================
+
+Subject:
+
+MaternalCare Alert: Moderate Risk Detected
+
+Body:
+
+Hello,
+
+The MaternalCare monitoring system has detected a Moderate Risk condition.
+
+Current Risk Score: {{score}}
+
+Live Vitals:
+HR: {{hr}}
+SpO2: {{spo2}}
+Temp: {{temp}}
+Resp: {{resp}}
+
+Summary:
+Some parameters are outside recommended wellness range.
+
+Recommended Action:
+- Recheck patient condition
+- Reposition belt sensors
+- Repeat reading in 5 minutes
+- Continue close monitoring
+
+Time:
+{{timestamp}}
+
+System:
+MaternalCare AI Monitoring
+
+==================================================
+EMAIL TEMPLATE 2
+HIGH RISK (75+)
+==================================================
+
+Subject:
+
+MaternalCare Warning: High Risk Condition
+
+Body:
+
+Attention,
+
+The MaternalCare system has identified a High Risk health condition.
+
+Current Risk Score: {{score}}
+
+Live Vitals:
+HR: {{hr}}
+SpO2: {{spo2}}
+Temp: {{temp}}
+Resp: {{resp}}
+
+AI Interpretation:
+Multiple abnormal vital signs detected.
+
+Recommended Action:
+- Immediate caregiver attention advised
+- Contact doctor / nurse
+- Continue live monitoring
+- Keep patient calm and stable
+
+Time:
+{{timestamp}}
+
+System:
+MaternalCare AI Monitoring
+
+==================================================
+EMAIL TEMPLATE 3
+CRITICAL ALERT (80+)
+==================================================
+
+Subject:
+
+URGENT: MaternalCare Critical Emergency Alert
+
+Body:
+
+URGENT ATTENTION REQUIRED
+
+The MaternalCare AI engine has detected a CRITICAL emergency condition.
+
+Current Risk Score: {{score}}
+
+Live Vitals:
+HR: {{hr}}
+SpO2: {{spo2}}
+Temp: {{temp}}
+Resp: {{resp}}
+
+Possible Severe Risk State Detected.
+
+Immediate Action:
+- Seek emergency medical assistance
+- Contact doctor immediately
+- Verify sensor placement while responding
+- Do not ignore this alert
+
+Time:
+{{timestamp}}
+
+System:
+MaternalCare Emergency Intelligence
+
+==================================================
+SMART ANTI-SPAM LOGIC
+==================================================
+
+Very important.
+
+Do NOT spam emails continuously.
+
+Rules:
+
+1. Send only once when entering a new tier.
+
+Example:
+
+64 -> 66 = send Moderate
+
+66 -> 70 = no resend
+
+70 -> 76 = send High Risk
+
+76 -> 79 = no resend
+
+79 -> 82 = send Critical
+
+2. Re-send only if:
+
+- Tier increases
+- Condition remains critical for 15 mins
+- Values worsen drastically
+
+==================================================
+RESET LOGIC
+==================================================
+
+If score drops below 60 for 10 mins:
+
+Reset alert state.
+
+Then future new rise can send again.
+
+==================================================
+REALTIME MONITORING FLOW
+==================================================
+
+When Firebase values update:
+
+1. Risk engine recalculates score
+2. Check threshold tier
+3. If tier changed upward:
+   send email automatically
+4. Save alert log
+
+==================================================
+ALERT HISTORY PANEL (UI)
+==================================================
+
+Add new dashboard card:
+
+Smart Alert History
+
+Show:
+
+- Time
+- Risk score
+- Level
+- Email sent status
+
+==================================================
+FEATURE SECTION UPDATE
+==================================================
+
+In website Features section add card:
+
+Smart Emergency Alerts
+
+Description:
+
+AI-triggered email notifications instantly sent to family and caregivers during risk conditions.
+
+==================================================
+BACKEND ROUTES
+==================================================
+
+Create secure route:
+
+/api/send-alert
+
+or integrate into existing /api/analyze flow.
+
+==================================================
+USE GEMINI TOO
+==================================================
+
+Include Gemini-generated short summary inside email body.
+
+Example:
+
+AI Note:
+{{geminiSummary}}
+
+Use GEMINI_API_KEY already stored in secrets.
+
+==================================================
+TEST CASES
+==================================================
+
+Score 67:
+Send Moderate email
+
+Score 77:
+Send High Risk email
+
+Score 84:
+Send Critical email
+
+Score 83 again after 1 min:
+No resend
+
+Score stays 84 for 15 mins:
+Resend reminder
+
+==================================================
+FINAL GOAL
+==================================================
+
+When judges see demo:
+
+Vitals worsen live ->
+Risk score rises ->
+Automatic email sent instantly ->
+Family receives alert ->
+Professional AI healthcare system shown.
+
+Build professionally now.
