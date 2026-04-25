@@ -5,13 +5,17 @@ Vite + React + TypeScript + shadcn/ui maternal-health monitoring SPA with a serv
 ## Setup
 - Dev server: `npm run dev` on port 5000 (host 0.0.0.0, allowedHosts true) via the "Start application" workflow.
 - Build: `npm run build` -> `dist/`
-- Deployment: autoscale, build `npm run build`, run `npm run preview` (serves built files + the same `/api/analyze` middleware).
+- Production server: `npm run start` (= `tsx server/server.ts`) — serves `dist/` statically AND mounts `/api/*` routes (analyze, ai-status, alert-history, send-alert) on port `$PORT` (default 5000).
+- Deployment: autoscale, build `npm run build`, run `npm run start`.
 
 ## Architecture
 - **Frontend**: `src/` — Landing page (`src/pages/Landing.tsx`) is the premium showcase with hero, dashboard, AI panel, etc. Realtime sensor values come from Firebase via `src/hooks/useRealtimeSensors.ts`.
-- **Server middleware**: `server/` — A small Vite plugin (`server/api-plugin.ts`) mounts `/api/analyze`, `/api/send-alert`, and `/api/alert-history` handlers in both `vite dev` and `vite preview`, so no separate Express server is needed.
+- **Server**: `server/` — Same handlers shared between dev and prod.
+  - In dev: `server/api-plugin.ts` (Vite plugin) mounts the routes on the Vite middleware.
+  - In prod: `server/server.ts` (plain Node `http`) serves the built SPA from `dist/` plus the same routes. SPA fallback to `index.html` for unknown non-`/api` paths. Long-cache for `/assets/*`, no-cache for `index.html`.
   - `server/risk.ts` — **professional weighted clinical engine**. Per-metric impacts (HR ≤25, SpO₂ ≤35, Temp ≤20, Resp ≤15, Offline 30, Movement ≤10) with banded thresholds. Multi-parameter combination bonuses, ECG intelligence (lead-off, PPG mismatch, flat trace), single + combined alert lists, sensor reliability summary. Status: Excellent / Stable / Monitor Closely / High Risk / Critical. Offline floors level to "Monitor Closely".
-  - `server/analyze.ts` — receives live vitals + ECG + mic + history, computes deterministic risk, asks Gemini (`gemini-2.5-flash` REST with `thinkingBudget: 0`) for `summary`, `recommendations[]`, `report`, `severity`, `combinedFindings[]`, `trend`. Local failsafe if Gemini fails. Then evaluates the alert engine and (maybe) dispatches email.
+  - `server/analyze.ts` — receives live vitals + ECG + mic + history, computes deterministic risk, asks Gemini (`gemini-2.5-flash` REST with `thinkingBudget: 0`) for `summary`, `recommendations[]`, `report`, `severity`, `combinedFindings[]`, `trend`. **Retries once** on transient errors (5xx/429/timeout/network). On any failure, returns local failsafe with `userMessage: "AI service temporarily unavailable"`. Exports `isGeminiConfigured()` and `checkGeminiKeyOnStartup()` (logs `Gemini API key missing` if absent). Then evaluates the alert engine and (maybe) dispatches email.
+  - `GET /api/ai-status` — health check returning `{ status: "ok", gemini: boolean, model, timestamp }`.
   - `server/alerts.ts` — tier engine: Moderate (≥65), High (≥75), Critical (≥80). Anti-spam: only sends on first entry to a tier, on tier escalation, on score worsening ≥8 within same tier, or every 15 min while critical. Resets after score < 60 sustained 10 min. Keeps in-memory history (last 50).
   - `server/email.ts` — Nodemailer + Gmail SMTP. Three branded email templates (Moderate/High/Critical) with HTML + plain text, includes Gemini summary as "AI Note", and ships to 4 hardcoded caregiver addresses.
 

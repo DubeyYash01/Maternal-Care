@@ -6,6 +6,19 @@ import { computeRisk, localSummary, type Vitals } from "./risk";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const GEMINI_TIMEOUT_MS = 9000;
+const GEMINI_MAX_ATTEMPTS = 2;
+const GEMINI_FALLBACK_MESSAGE = "AI service temporarily unavailable";
+
+export const isGeminiConfigured = (): boolean =>
+  typeof process.env.GEMINI_API_KEY === "string" && process.env.GEMINI_API_KEY.trim().length > 0;
+
+export const checkGeminiKeyOnStartup = (): void => {
+  if (!isGeminiConfigured()) {
+    console.warn("[gemini] Gemini API key missing — set GEMINI_API_KEY in Replit Secrets to enable AI insights.");
+  } else {
+    console.log("[gemini] Gemini API key detected — AI insights enabled (model: " + GEMINI_MODEL + ").");
+  }
+};
 
 const sendJson = (res: ServerResponse, status: number, body: unknown) => {
   res.statusCode = status;
@@ -101,10 +114,15 @@ const extractJson = (text: string): GeminiInsight | null => {
   }
 };
 
-const callGemini = async (vitals: Vitals, risk: ReturnType<typeof computeRisk>) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return { ok: false as const, reason: "missing_api_key" };
+type GeminiResult =
+  | { ok: true; parsed: GeminiInsight }
+  | { ok: false; reason: string; detail?: string; retryable?: boolean };
 
+const callGeminiOnce = async (
+  apiKey: string,
+  vitals: Vitals,
+  risk: ReturnType<typeof computeRisk>,
+): Promise<GeminiResult> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
@@ -127,7 +145,14 @@ const callGemini = async (vitals: Vitals, risk: ReturnType<typeof computeRisk>) 
 
     if (!response.ok) {
       const txt = await response.text().catch(() => "");
-      return { ok: false as const, reason: `gemini_http_${response.status}`, detail: txt.slice(0, 200) };
+      // 5xx and 429 are transient and worth a retry; 4xx (auth/bad key/model) are not.
+      const retryable = response.status >= 500 || response.status === 429;
+      return {
+        ok: false,
+        reason: `gemini_http_${response.status}`,
+        detail: txt.slice(0, 240),
+        retryable,
+      };
     }
 
     const data = (await response.json()) as {
@@ -135,17 +160,47 @@ const callGemini = async (vitals: Vitals, risk: ReturnType<typeof computeRisk>) 
     };
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const parsed = extractJson(text);
-    if (!parsed) return { ok: false as const, reason: "parse_failed" };
+    if (!parsed) return { ok: false, reason: "parse_failed", retryable: true };
 
-    return { ok: true as const, parsed };
+    return { ok: true, parsed };
   } catch (err) {
+    const isTimeout = err instanceof Error && err.name === "AbortError";
     return {
-      ok: false as const,
-      reason: err instanceof Error && err.name === "AbortError" ? "timeout" : "network_error",
+      ok: false,
+      reason: isTimeout ? "timeout" : "network_error",
+      detail: err instanceof Error ? err.message.slice(0, 200) : undefined,
+      retryable: true,
     };
   } finally {
     clearTimeout(timeout);
   }
+};
+
+const callGemini = async (
+  vitals: Vitals,
+  risk: ReturnType<typeof computeRisk>,
+): Promise<GeminiResult> => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    console.warn("[gemini] Gemini API key missing — using local failsafe.");
+    return { ok: false, reason: "missing_api_key" };
+  }
+
+  let last: GeminiResult = { ok: false, reason: "no_attempt" };
+  for (let attempt = 1; attempt <= GEMINI_MAX_ATTEMPTS; attempt += 1) {
+    last = await callGeminiOnce(apiKey, vitals, risk);
+    if (last.ok) return last;
+    if (!last.retryable) {
+      console.warn(`[gemini] Request failed (no retry): ${last.reason}${last.detail ? " — " + last.detail : ""}`);
+      return last;
+    }
+    if (attempt < GEMINI_MAX_ATTEMPTS) {
+      console.warn(`[gemini] Attempt ${attempt} failed (${last.reason}) — retrying once.`);
+      await new Promise((r) => setTimeout(r, 350));
+    }
+  }
+  console.warn(`[gemini] All attempts failed: ${last.reason}${last.detail ? " — " + last.detail : ""}`);
+  return last;
 };
 
 const cleanStrArray = (v: unknown, max = 6): string[] => {
@@ -213,6 +268,10 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
         trend: local.trend,
         source: "local" as const,
         reason: ai.reason,
+        userMessage:
+          ai.reason === "missing_api_key"
+            ? "AI key not configured — showing local insight."
+            : GEMINI_FALLBACK_MESSAGE,
       };
 
   // Evaluate + (maybe) dispatch tier email alert

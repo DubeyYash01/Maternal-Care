@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 
 import { getAlertEngineState, getAlertHistory, processAlert } from "./alerts";
-import { handleAnalyze } from "./analyze";
+import { checkGeminiKeyOnStartup, handleAnalyze, isGeminiConfigured } from "./analyze";
 
 const sendJson = (res: any, status: number, body: unknown) => {
   res.statusCode = status;
@@ -40,6 +40,16 @@ const num = (v: unknown): number | null => {
 export const apiPlugin = (): Plugin => {
   const middleware = async (req: any, res: any, next: any) => {
     const path = req.url ? req.url.split("?")[0] : "";
+
+    if (path === "/api/ai-status" && req.method === "GET") {
+      sendJson(res, 200, {
+        status: "ok",
+        gemini: isGeminiConfigured(),
+        model: "gemini-2.5-flash",
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
 
     if (path === "/api/analyze") {
       try {
@@ -94,9 +104,11 @@ export const apiPlugin = (): Plugin => {
   return {
     name: "maternal-care-api-plugin",
     configureServer(server) {
+      checkGeminiKeyOnStartup();
       server.middlewares.use(middleware);
     },
     configurePreviewServer(server) {
+      checkGeminiKeyOnStartup();
       server.middlewares.use(middleware);
     },
   };

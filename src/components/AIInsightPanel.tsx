@@ -78,6 +78,7 @@ type AnalyzeResponse = {
     trend: string;
     source: "gemini" | "local";
     reason?: string;
+    userMessage?: string;
   };
   alert?: {
     tier: "moderate" | "high" | "critical" | null;
@@ -291,7 +292,14 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(vitals),
       });
-      if (!res.ok) throw new Error(`Analysis failed (${res.status})`);
+      if (!res.ok) {
+        // Don't crash — surface a friendly fallback message.
+        const friendly =
+          res.status === 404
+            ? "AI service temporarily unavailable"
+            : `AI service temporarily unavailable (${res.status})`;
+        throw new Error(friendly);
+      }
       const json = (await res.json()) as AnalyzeResponse;
       setData(json);
       lastScoreRef.current = json.score;
@@ -301,7 +309,7 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
         fetchAlertHistory();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
+      setError(err instanceof Error ? err.message : "AI service temporarily unavailable");
     } finally {
       inFlight.current = false;
       setLoading(false);
