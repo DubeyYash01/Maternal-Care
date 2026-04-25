@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 
+import { processAlert, tierFromScore } from "./alerts";
 import { computeRisk, localSummary, type Vitals } from "./risk";
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -214,6 +215,17 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
         reason: ai.reason,
       };
 
+  // Evaluate + (maybe) dispatch tier email alert
+  const alert = await processAlert({
+    score: risk.score,
+    level: risk.level,
+    hr: vitals.heartRate,
+    spo2: vitals.spo2,
+    temp: vitals.temperature,
+    resp: vitals.respiration,
+    geminiSummary: insight.summary,
+  });
+
   sendJson(res, 200, {
     score: risk.score,
     level: risk.level,
@@ -223,6 +235,12 @@ export const handleAnalyze = async (req: IncomingMessage, res: ServerResponse) =
     signalQuality: risk.signalQuality,
     reliability: risk.reliability,
     insight,
+    alert: {
+      tier: alert.tier,
+      currentTier: tierFromScore(risk.score),
+      sent: alert.sent,
+      reason: alert.reason,
+    },
     analyzedAt: new Date().toISOString(),
   });
 };

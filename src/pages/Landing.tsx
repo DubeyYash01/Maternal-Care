@@ -86,7 +86,7 @@ const features = [
   { icon: Wind, title: "Respiration Rhythm", text: "Listen to breath patterns with INMP441 acoustics." },
   { icon: Activity, title: "ECG Waveform", text: "Clinical-grade ECG streamed live from AD8232." },
   { icon: Signal, title: "Pressure & Movement", text: "Sense fetal kicks and posture via FSR sensors." },
-  { icon: Bell, title: "Smart Alerts", text: "Auto-escalate anomalies to doctors and family." },
+  { icon: Bell, title: "Smart Emergency Alerts", text: "AI-triggered email notifications instantly sent to family and caregivers during risk conditions." },
   { icon: ShieldCheck, title: "HIPAA-ready Cloud", text: "Encrypted Firebase pipeline with audit trails." },
 ];
 

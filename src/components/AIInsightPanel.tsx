@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   AlertTriangle,
+  Bell,
+  BellRing,
   Brain,
   CheckCircle2,
   Download,
@@ -10,6 +12,7 @@ import {
   FileText,
   Heart,
   Loader2,
+  Mail,
   RefreshCw,
   ShieldCheck,
   Signal,
@@ -76,7 +79,24 @@ type AnalyzeResponse = {
     source: "gemini" | "local";
     reason?: string;
   };
+  alert?: {
+    tier: "moderate" | "high" | "critical" | null;
+    currentTier: "moderate" | "high" | "critical" | null;
+    sent: boolean;
+    reason: string;
+  };
   analyzedAt: string;
+};
+
+type AlertHistoryEntry = {
+  id: string;
+  timestamp: string;
+  score: number;
+  level: string;
+  tier: "moderate" | "high" | "critical";
+  emailSent: boolean;
+  reason: string;
+  recipients: number;
 };
 
 const POLL_INTERVAL_MS = 60_000;
@@ -220,10 +240,34 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [alertHistory, setAlertHistory] = useState<AlertHistoryEntry[]>([]);
+  const [smtpConfigured, setSmtpConfigured] = useState<boolean>(true);
+  const [recentlySent, setRecentlySent] = useState<{ tier: string; at: number } | null>(null);
   const inFlight = useRef(false);
   const lastScoreRef = useRef<number | null>(null);
   const lastLevelRef = useRef<RiskLevel | null>(null);
   const lastCallAtRef = useRef<number>(0);
+
+  const fetchAlertHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/alert-history");
+      if (!res.ok) return;
+      const json = (await res.json()) as {
+        history: AlertHistoryEntry[];
+        engine: { smtpConfigured: boolean };
+      };
+      setAlertHistory(json.history);
+      setSmtpConfigured(json.engine.smtpConfigured);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAlertHistory();
+    const id = setInterval(fetchAlertHistory, 30_000);
+    return () => clearInterval(id);
+  }, [fetchAlertHistory]);
 
   const hasAnyVital = useMemo(
     () =>
@@ -252,13 +296,17 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
       setData(json);
       lastScoreRef.current = json.score;
       lastLevelRef.current = json.level;
+      if (json.alert?.sent && json.alert.tier) {
+        setRecentlySent({ tier: json.alert.tier, at: Date.now() });
+        fetchAlertHistory();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       inFlight.current = false;
       setLoading(false);
     }
-  }, [vitals]);
+  }, [vitals, fetchAlertHistory]);
 
   useEffect(() => {
     if (!data && !loading && !error && hasAnyVital) runAnalyze();
@@ -571,6 +619,93 @@ export const AIInsightPanel = ({ vitals, lastUpdated }: Props) => {
             </div>
           </div>
         )}
+
+        {/* Live Alert Banner — flashes when an email was just sent */}
+        <AnimatePresence>
+          {recentlySent && Date.now() - recentlySent.at < 8000 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium ${
+                recentlySent.tier === "critical"
+                  ? "border-rose-500/30 bg-rose-500/10 text-rose-700"
+                  : recentlySent.tier === "high"
+                  ? "border-orange-500/30 bg-orange-500/10 text-orange-700"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-700"
+              }`}
+            >
+              <BellRing className="h-4 w-4 animate-pulse" />
+              <span>
+                {recentlySent.tier === "critical"
+                  ? "Critical emergency alert email dispatched to caregivers."
+                  : recentlySent.tier === "high"
+                  ? "High-risk alert email dispatched to caregivers."
+                  : "Moderate-risk alert email dispatched to caregivers."}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Smart Alert History */}
+        <div className="rounded-2xl border border-border/60 bg-white p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-secondary" />
+              <p className="text-sm font-semibold">Smart Alert History</p>
+            </div>
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Mail className="h-3 w-3" />
+              {smtpConfigured ? "SMTP active · 4 caregivers" : "SMTP not configured"}
+            </span>
+          </div>
+          {alertHistory.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No alerts yet. The system will email caregivers automatically when score crosses 65 / 75 / 80.
+            </p>
+          ) : (
+            <div className="max-h-56 space-y-1.5 overflow-auto pr-1">
+              {alertHistory.map((a) => {
+                const tone =
+                  a.tier === "critical"
+                    ? "bg-rose-500/5 border-rose-500/20 text-rose-700"
+                    : a.tier === "high"
+                    ? "bg-orange-500/5 border-orange-500/20 text-orange-700"
+                    : "bg-amber-500/5 border-amber-500/20 text-amber-700";
+                const time = new Date(a.timestamp).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                });
+                return (
+                  <div
+                    key={a.id}
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-[12px] ${tone}`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="font-mono text-[11px] opacity-70">{time}</span>
+                      <span className="font-semibold capitalize">{a.tier}</span>
+                      <span className="text-muted-foreground">· score {a.score}</span>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-[11px]">
+                      {a.emailSent ? (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          <span className="text-emerald-700">Sent · {a.recipients}</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="h-3 w-3 text-rose-600" />
+                          <span className="text-rose-700">Failed</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Smart Report */}
         {data && (

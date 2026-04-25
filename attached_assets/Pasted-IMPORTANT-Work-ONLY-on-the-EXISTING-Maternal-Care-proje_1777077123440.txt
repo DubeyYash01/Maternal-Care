@@ -1,0 +1,379 @@
+IMPORTANT: Work ONLY on the EXISTING Maternal Care project in this Replit workspace.
+
+Do NOT create a new project.
+Do NOT remove current Firebase syncing.
+Do NOT break dashboard functionality.
+Do NOT remove AI modules.
+Do NOT replace existing website content.
+
+Only UPGRADE the UI / UX into a PREMIUM 3D FUTURISTIC EXPERIENCE.
+
+==================================================
+MASTER GOAL
+==================================================
+
+Transform current Maternal Care website into a WORLD-CLASS premium healthcare startup website with cinematic 3D visuals, depth, smooth motion, futuristic interactions, and stage-stealing presentation quality.
+
+Need the feeling of:
+
+Apple keynote + futuristic medtech startup + Antigravity style immersive website.
+
+Website should impress judges instantly.
+
+==================================================
+TECH STACK TO USE
+==================================================
+
+Use these libraries if project supports them:
+
+- Three.js
+- React Three Fiber
+- Drei
+- GSAP
+- Framer Motion
+- Spline embeds (optional)
+- Lenis smooth scroll (optional)
+
+Use whichever integrates best into current React/Vite project.
+
+==================================================
+CRITICAL RULES
+==================================================
+
+Keep current content, sections, Firebase data, AI dashboard.
+
+Only redesign visuals + add 3D motion + premium interactions.
+
+No lag.
+No broken mobile layout.
+No heavy unnecessary effects.
+
+Performance optimized.
+
+==================================================
+1. HERO SECTION – MAIN WOW FACTOR
+==================================================
+
+Current hero section must become cinematic.
+
+Create immersive 3D scene on right side.
+
+Include:
+
+A floating smart maternal belt device model (stylized if no real model available)
+
+Features:
+
+- slowly rotating in 3D
+- soft blue/purple medical glow
+- floating in space
+- subtle shadow under device
+- depth perspective
+- responsive to mouse movement
+
+Around device add floating badges:
+
+- Live Sync
+- Secure
+- Smart AI
+- Real-Time Vitals
+- Emergency Alerts
+
+Background:
+
+- soft moving particles
+- gradient light beams
+- subtle heartbeat pulse rings
+- glassmorphism layers
+
+Text on left remains but animate beautifully.
+
+Buttons:
+
+- Explore Dashboard
+- Get Started
+
+Hover effects:
+premium magnetic motion
+
+==================================================
+2. FLOATING HEART PULSE VISUAL
+==================================================
+
+Inside hero scene:
+
+Create floating heart icon in center.
+
+Behavior:
+
+- pulse every 1.2 sec
+- emits circular signal waves
+- reacts softly to cursor
+
+==================================================
+3. MEDICAL PARTICLE SYSTEM
+==================================================
+
+Across homepage add tiny glowing particles.
+
+Behavior:
+
+- floating slowly upward
+- random motion
+- subtle opacity changes
+
+Should feel futuristic, not childish.
+
+==================================================
+4. 3D DATA PIPELINE SECTION
+==================================================
+
+Upgrade "About Product / Pipeline" section.
+
+Visualize flow:
+
+Sensor Belt -> ESP32 -> Firebase -> AI Dashboard -> Alerts
+
+Use animated connector lines.
+
+Each card enters on scroll.
+
+When hovered:
+
+slight 3D tilt + glow.
+
+==================================================
+5. FEATURES SECTION PREMIUM CARDS
+==================================================
+
+Current cards:
+
+Heart Rate
+SpO2
+Temp
+Respiration
+ECG
+Movement
+Smart Alerts
+Cloud
+
+Upgrade each card:
+
+- glass card
+- floating hover lift
+- icon animation
+- border glow
+- tilt on mouse move
+
+Examples:
+
+Heart Rate card:
+icon heartbeat pulse
+
+SpO2:
+circular oxygen ring animation
+
+ECG:
+mini live waveform line
+
+Smart Alerts:
+flashing notification ring
+
+==================================================
+6. LIVE DASHBOARD ENTRY EFFECT
+==================================================
+
+When user scrolls to dashboard:
+
+Animate counters from 0 to live value.
+
+Examples:
+
+HR: 0 -> current bpm
+SpO2: 0 -> live %
+Temp: fade count-up
+
+Cards slide upward elegantly.
+
+==================================================
+7. AI SECTION PREMIUM LOOK
+==================================================
+
+AI Health Intelligence area must feel like futuristic control center.
+
+Add:
+
+- holographic border glow
+- scanning light effect
+- animated risk gauge
+- AI neural background lines
+- Gemini insight typing animation
+
+Analyze button:
+
+premium hover spin icon.
+
+==================================================
+8. FUTURE SECTION UPGRADE
+==================================================
+
+Cards:
+
+AI Risk Prediction
+Doctor Companion
+Hospital Command Center
+
+Make them look like futuristic roadmap tiles.
+
+On hover:
+
+- rise upward
+- neon border glow
+- icon rotate
+
+==================================================
+9. NAVBAR UPGRADE
+==================================================
+
+Sticky glass navbar.
+
+Behavior:
+
+- transparent at top
+- blur on scroll
+- smooth active link highlight
+- elegant dark mode icon animation
+
+==================================================
+10. PAGE SCROLL EXPERIENCE
+==================================================
+
+Use smooth scroll.
+
+Every section should reveal with motion:
+
+fade up
+slide in
+staggered cards
+parallax layers
+
+==================================================
+11. MICROINTERACTIONS
+==================================================
+
+Buttons:
+
+- ripple hover
+- magnetic cursor attraction
+- scale on click
+
+Cards:
+
+- tilt based on mouse position
+
+Numbers:
+
+- animate when visible
+
+==================================================
+12. COLOR SYSTEM
+==================================================
+
+Premium healthcare palette:
+
+Soft White
+Sky Blue
+Medical Cyan
+Lavender Purple
+Clean Dark Text
+
+No harsh colors.
+
+==================================================
+13. MOBILE RESPONSIVE
+==================================================
+
+Must work perfectly on mobile.
+
+On mobile:
+
+Disable heavy 3D if needed.
+
+Use simplified version.
+
+==================================================
+14. PERFORMANCE RULES
+==================================================
+
+Use lazy loading.
+
+FPS should remain smooth.
+
+No huge models.
+
+Use stylized geometry if no 3D model available.
+
+==================================================
+15. OPTIONAL BELT MODEL
+==================================================
+
+If no real belt model exists:
+
+Create abstract smart wearable belt using cylinders / rounded geometry in Three.js.
+
+Should look premium.
+
+==================================================
+16. SFX FEEL (VISUAL ONLY)
+==================================================
+
+No sound required.
+
+But visuals should feel alive.
+
+==================================================
+17. PRESERVE EXISTING FUNCTIONALITY
+==================================================
+
+Realtime Firebase dashboard must still work.
+
+AI alerts must still work.
+
+Email alerts must still work.
+
+Do not break backend.
+
+==================================================
+18. FINAL IMPRESSION GOAL
+==================================================
+
+When someone opens site they should say:
+
+"This looks like a funded startup product."
+
+==================================================
+19. IMPLEMENTATION ORDER
+==================================================
+
+Step 1 Hero 3D
+Step 2 Cards motion
+Step 3 Scroll reveals
+Step 4 AI section holographic
+Step 5 Navbar polish
+Step 6 Performance optimize
+
+==================================================
+20. FINAL QA CHECK
+==================================================
+
+No console errors.
+No broken imports.
+No lag.
+No white flashes.
+No mobile overflow.
+
+==================================================
+BUILD NOW
+==================================================
+
+Upgrade current Maternal Care website into premium 3D cinematic futuristic healthcare experience while keeping all current features working.
